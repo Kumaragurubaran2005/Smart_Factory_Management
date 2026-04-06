@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mechanic Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0; padding: 0; font-family: 'Inter', sans-serif;
+            background: #0f172a; color: white;
+        }
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255, 255, 255, 0.05); padding: 20px 40px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .header h2 { margin: 0; font-weight: 800; color: #f8fafc; }
+        .header a { color: #f1f5f9; text-decoration: none; padding: 8px 16px; background: rgba(255,255,255,0.1); border-radius: 6px; font-size: 0.9rem;}
+        .header a:hover { background: rgba(255,255,255,0.2); }
+        
+        .container { padding: 40px; max-width: 900px; margin: 0 auto; }
+        h3 { font-size: 1.25rem; margin-bottom: 24px; color: #cbd5e1; }
+        
+        .machine-list { display: grid; gap: 16px; }
+        .machine-card {
+            background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+            padding: 24px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .machine-card.critical {
+            border-color: #ef4444; background: rgba(239, 68, 68, 0.1);
+        }
+        .info { flex-grow: 1; }
+        .id { font-size: 1.25rem; font-weight: 800; margin-bottom: 4px; }
+        .type { color: #94a3b8; font-size: 0.9rem; margin-bottom: 12px;}
+        .health { font-weight: 600; font-size: 1.5rem; }
+        .health.red { color: #ef4444; }
+        .health.green { color: #10b981; }
+        
+        .btn {
+            padding: 12px 24px; background: #3b82f6; border: none;
+            color: white; font-weight: 600; cursor: pointer; transition: 0.2s; border-radius: 8px;
+        }
+        .btn:hover { background: #2563eb; }
+        .btn.repair { background: #ef4444; }
+        .btn.repair:hover { background: #dc2626; }
+        .status { padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; background: #10b981; margin-left: auto; margin-right: 20px;}
+        
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>🛠️ Mechanic Portal</h2>
+        <span>Mechanic: <strong>{{ name }}</strong>  <a href="/logout" style="margin-left:15px;">Log Out</a></span>
+    </div>
+
+    <div class="container">
+        <h3>Active Maintenance Queue</h3>
+        <p style="color:#64748b; font-size:0.9rem; margin-top:-15px; margin-bottom:30px;">
+            Machines with >70% wear are automatically pulled from the production line and routed here for maintenance.
+        </p>
+        <div id="machineList" class="machine-list">
+            <!-- Populated dynamically -->
+            <div style="text-align:center; color:#94a3b8; padding: 40px;">Scanning for hardware issues...</div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchMachines() {
+            try {
+                const res = await fetch('/api/stats');
+                const data = await res.json();
+                
+                const list = document.getElementById('machineList');
+                list.innerHTML = "";
+                
+                let criticalFound = false;
+                
+                // Sort machines so critical ones are on top
+                const sorted = data.machines.sort((a,b) => a.health - b.health);
+                
+                sorted.forEach(m => {
+                    const hp = Math.round(m.health * 100);
+                    const wear = Math.round(m.wear || 0);
+                    const isCritical = hp < 30; // Wear > 70%
+                    
+                    if (isCritical) criticalFound = true;
+                    
+                    const card = document.createElement('div');
+                    card.className = `machine-card ${isCritical ? 'critical' : ''}`;
+                    
+                    card.innerHTML = `
+                        <div class="info">
+                            <div class="id">${m.id}</div>
+                            <div class="type">${m.name} Stage</div>
+                            <div class="health ${isCritical ? 'red' : 'green'}">${hp}% Health</div>
+                            <div style="color:#64748b; font-size:0.8rem; margin-top:4px;">Recorded wear level: ${wear}%</div>
+                        </div>
+                        ${isCritical ? 
+                            `<span style="color:#ef4444; font-weight:600; font-size:0.9rem; margin-right:20px;">LOCKED (MAINTENANCE)</span>
+                             <button class="btn repair" onclick="deployFix('${m.id}')">Deploy Fix</button>` :
+                            `<div class="status">Operational</div>`
+                        }
+                    `;
+                    list.appendChild(card);
+                });
+                
+                if(sorted.length === 0) {
+                    list.innerHTML = `<div style="text-align:center; color:#94a3b8; padding: 40px;">No machines found in database.</div>`;
+                }
+
+            } catch(e) { console.error("Error fetching machines", e); }
+        }
+
+        async function deployFix(machineId) {
+            try {
+                const res = await fetch('/api/repair', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ machine_id: machineId })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    alert('Repair successful. Machine reset to 100% health.');
+                    fetchMachines(); // Refresh UI
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch(e) {
+                alert('Connection error');
+            }
+        }
+
+        // Poll every 3 seconds for new broken machines
+        setInterval(fetchMachines, 3000);
+        fetchMachines();
+    </script>
+</body>
+</html>

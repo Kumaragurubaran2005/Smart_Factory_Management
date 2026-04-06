@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Orders History - Smart Factory</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">Orders History</h3>
+                <a href="/" class="btn btn-sm btn-light">Back to Dashboard</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer Name</th>
+                                <th>Quantity (units)</th>
+                                <th>Deadline</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                            <tr><td colspan="6" class="text-center">Loading orders...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        async function loadOrders() {
+            try {
+                const res = await fetch('/api/orders_history');
+                const orders = await res.json();
+                const tbody = document.getElementById('ordersTableBody');
+                
+                if (orders.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">No orders found.</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = orders.map(o => `
+                    <tr>
+                        <td>#${o.id}</td>
+                        <td>${o.customer_name}</td>
+                        <td>${o.quantity}</td>
+                        <td>${o.deadline}</td>
+                        <td><span class="badge ${o.status === 'pending' ? 'bg-warning' : 'bg-success'}">${o.status}</span></td>
+                        <td>${new Date(o.created_at).toLocaleString()}</td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                document.getElementById('ordersTableBody').innerHTML = '<tr><td colspan="6" class="text-center text-danger">Failed to load orders.</td></tr>';
+            }
+        }
+        
+        // Load on start
+        loadOrders();
+    </script>
+</body>
+</html>

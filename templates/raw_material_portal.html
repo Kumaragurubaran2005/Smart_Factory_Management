@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Raw Material Portal · Neural Factory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #020C18, #071428 55%, #0D1F3C);
+      color: #D0E8FF
+    }
+
+    /* Navbar */
+    .navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 32px;
+      background: rgba(5, 16, 38, 0.85);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(59, 158, 255, 0.15);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .nav-logo {
+      font-size: 1.1rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #3B9EFF, #AA44FF);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 16px;
+    }
+
+    .nav-links a {
+      color: #8AAED0;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 20px;
+      transition: all 0.2s;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      background: rgba(59, 158, 255, 0.15);
+      color: #7BD4FF;
+    }
+
+    .logout-btn {
+      background: rgba(20, 35, 55, 0.9);
+      border: 1px solid rgba(255, 80, 100, 0.6);
+      padding: 6px 16px;
+      border-radius: 48px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+      color: #FFB7C5;
+      font-size: 0.85rem;
+      text-decoration: none;
+    }
+
+    .logout-btn:hover {
+      background: #FF3366;
+      color: white;
+      border-color: white;
+      transform: scale(0.97);
+      box-shadow: 0 0 15px #FF3366;
+    }
+
+    .page-hero {
+      text-align: center;
+      padding: 40px 20px 28px
+    }
+
+    .page-hero h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #22DD77, #3B9EFF 60%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent
+    }
+
+    .page-hero p {
+      color: #6A8FAD;
+      margin-top: 6px
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0;
+      background: rgba(10, 22, 44, .8);
+      border-radius: 16px;
+      padding: 4px;
+      max-width: 600px;
+      margin: 0 auto 32px;
+      border: 1px solid rgba(59, 158, 255, .12)
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      font-size: .82rem;
+      font-weight: 700;
+      cursor: pointer;
+      border-radius: 12px;
+      transition: all .2s;
+      color: #6A8FAD
+    }
+
+    .tab.active {
+      background: linear-gradient(135deg, #3B9EFF, #8844FF);
+      color: #fff
+    }
+
+    .tab-panel {
+      display: none;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 32px 60px
+    }
+
+    .tab-panel.active {
+      display: block
+    }
+
+    .layout2 {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 24px
+    }
+
+    .layout3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px
+    }
+
+    .card {
+      background: rgba(10, 22, 44, .75);
+      border: 1px solid rgba(59, 158, 255, .12);
+      border-radius: 20px;
+      padding: 26px;
+      backdrop-filter: blur(12px);
+      margin-bottom: 20px
+    }
+
+    .card h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #7BD4FF;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    /* Inventory cards */
+    .inv-card {
+      background: rgba(5, 15, 35, .85);
+      border-radius: 18px;
+      padding: 22px;
+      border: 1px solid rgba(59, 158, 255, .1);
+      text-align: center;
+      position: relative;
+      overflow: hidden
+    }
+
+    .inv-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      border-radius: 18px 18px 0 0
+    }
+
+    .inv-mat {
+      font-size: .7rem;
+      font-weight: 700;
+      color: #5A7A9D;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 8px
+    }
+
+    .inv-qty {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1
+    }
+
+    .inv-unit {
+      font-size: .72rem;
+      color: #4A6A8A;
+      margin-top: 2px
+    }
+
+    .inv-bar {
+      height: 6px;
+      background: rgba(59, 158, 255, .1);
+      border-radius: 3px;
+      margin: 12px 0 4px;
+      overflow: hidden
+    }
+
+    .inv-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width .6s
+    }
+
+    .inv-warn {
+      font-size: .68rem;
+      font-weight: 700
+    }
+
+    /* Horizon tabs for AI prediction */
+    .hor-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 18px
+    }
+
+    .hor-tab {
+      padding: 7px 18px;
+      border: 1px solid rgba(59, 158, 255, .2);
+      border-radius: 20px;
+      background: transparent;
+      color: #6A8FAD;
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all .2s
+    }
+
+    .hor-tab.active {
+      background: rgba(59, 158, 255, .18);
+      border-color: #3B9EFF;
+      color: #7BD4FF
+    }
+
+    /* Material prediction rows */
+    .pred-row {
+      background: rgba(5, 15, 35, .7);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(59, 158, 255, .08)
+    }
+
+    .pred-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px
+    }
+
+    .pred-mat {
+      font-size: .82rem;
+      font-weight: 700;
+      color: #C0D8F0
+    }
+
+    .pred-status {}
+
+    .pred-cols {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px
+    }
+
+    .pred-col {
+      text-align: center
+    }
+
+    .pred-label {
+      font-size: .66rem;
+      color: #4A6A8A;
+      text-transform: uppercase;
+      letter-spacing: .05em
+    }
+
+    .pred-val {
+      font-size: .88rem;
+      font-weight: 700;
+      margin-top: 2px
+    }
+
+    /* Scenarios */
+    .scenario-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 20px
+    }
+
+    .sc-card {
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      border: 1px solid;
+      position: relative;
+      overflow: hidden
+    }
+
+    .sc-base {
+      background: rgba(59, 158, 255, .07);
+      border-color: rgba(59, 158, 255, .2)
+    }
+
+    .sc-bull {
+      background: rgba(34, 221, 119, .07);
+      border-color: rgba(34, 221, 119, .2)
+    }
+
+    .sc-bear {
+      background: rgba(255, 68, 85, .07);
+      border-color: rgba(255, 68, 85, .2)
+    }
+
+    .sc-label {
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: 6px
+    }
+
+    .sc-total {
+      font-size: 1.9rem;
+      font-weight: 800
+    }
+
+    .sc-avg {
+      font-size: .76rem;
+      color: #5A7A9D;
+      margin-top: 2px
+    }
+
+    /* Procurement form */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px
+    }
+
+    label {
+      font-size: .74rem;
+      font-weight: 600;
+      color: #6A8FAD;
+      letter-spacing: .06em;
+      text-transform: uppercase
+    }
+
+    input,
+    select,
+    textarea {
+      background: rgba(5, 15, 35, .8);
+      border: 1px solid rgba(59, 158, 255, .2);
+      border-radius: 12px;
+      color: #D0E8FF;
+      font-family: 'Inter', sans-serif;
+      font-size: .88rem;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color .2s;
+      width: 100%
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #3B9EFF
+    }
+
+    select option {
+      background: #071428
+    }
+
+    .btn-order {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #22DD77, #3B9EFF);
+      color: #050f23;
+      font-size: .9rem;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      margin-top: 6px;
+      transition: all .2s
+    }
+
+    .btn-order:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px)
+    }
+
+    /* Procurement history */
+    table {
+      width: 100%;
+      border-collapse: collapse
+    }
+
+    th {
+      font-size: .7rem;
+      font-weight: 700;
+      color: #4A6A8A;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid rgba(59, 158, 255, .1)
+    }
+
+    td {
+      font-size: .82rem;
+      color: #C0D8F0;
+      padding: 11px 14px;
+      border-bottom: 1px solid rgba(59, 158, 255, .07);
+      vertical-align: middle
+    }
+
+    tr:hover td {
+      background: rgba(59, 158, 255, .04)
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: .7rem;
+      font-weight: 700
+    }
+
+    .b-ordered {
+      background: rgba(59, 158, 255, .15);
+      border: 1px solid rgba(59, 158, 255, .3);
+      color: #7BD4FF
+    }
+
+    .b-delivered {
+      background: rgba(34, 221, 119, .12);
+      border: 1px solid rgba(34, 221, 119, .3);
+      color: #22DD77
+    }
+
+    .b-urgent {
+      background: rgba(255, 68, 85, .12);
+      border: 1px solid rgba(255, 68, 85, .3);
+      color: #FF4455
+    }
+
+    .b-normal {
+      background: rgba(59, 158, 255, .1);
+      border: 1px solid rgba(59, 158, 255, .2);
+      color: #8AAED0
+    }
+
+    .b-high {
+      background: rgba(255, 170, 68, .12);
+      border: 1px solid rgba(255, 170, 68, .3);
+      color: #FFAA44
+    }
+
+    .chart-wrap {
+      height: 240px;
+      position: relative
+    }
+
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(5, 15, 35, .95);
+      border: 1px solid #22DD77;
+      border-radius: 12px;
+      padding: 12px 20px;
+      color: #22DD77;
+      font-size: .85rem;
+      font-weight: 600;
+      z-index: 999;
+      transform: translateX(120%);
+      transition: transform .3s
+    }
+
+    .toast.show {
+      transform: translateX(0)
+    }
+
+    .btn-receive {
+      padding: 4px 12px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(34, 221, 119, .15);
+      border: 1px solid rgba(34, 221, 119, .3);
+      color: #22DD77;
+      font-size: .7rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar">
+    <div class="nav-logo">⚡ Neural Factory</div>
+    <div class="nav-links">
+      <a href="/">Dashboard</a>
+      <a href="/orders_portal">Orders</a>
+      <a href="/place_order">Place Order</a>
+      <a href="/warehouse_dashboard">Warehouse</a>
+      <a href="/raw_material_portal" class="active">Raw Materials</a>
+      <a href="/logout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="page-hero">
+    <h1>🌿 Raw Material Portal</h1>
+    <p>AI-driven procurement prediction, inventory tracking, and supplier ordering for the leather production line</p>
+  </div>
+
+  <div class="tabs" style="max-width:700px">
+    <div class="tab active" onclick="showTab('inventory',this)">📦 Inventory</div>
+    <div class="tab" onclick="showTab('ai',this)">🧠 AI Prediction</div>
+    <div class="tab" onclick="showTab('market',this)">📈 Market Forecast</div>
+    <div class="tab" onclick="showTab('procurement',this)">🛒 Procurement</div>
+  </div>
+
+  <!-- TAB: Inventory -->
+  <div class="tab-panel active" id="tab-inventory">
+    <div class="layout3" id="invCards">
+      <div style="grid-column:1/-1;text-align:center;color:#3A5570;padding:30px">Loading inventory…</div>
+    </div>
+    <div class="card">
+      <div class="chart-wrap"><canvas id="invChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TAB: AI Prediction -->
+  <div class="tab-panel" id="tab-ai">
+    <div class="card">
+      <h2>🧠 AI Raw Material Needs Forecast</h2>
+      <p style="font-size:.82rem;color:#5A7A9D;margin-bottom:16px">Based on recent orders and current inventory levels,
+        the AI predicts procurement requirements across time horizons.</p>
+      <div class="hor-tabs">
+        <button class="hor-tab active" onclick="setHorizon('days_7',this)">7 Days</button>
+        <button class="hor-tab" onclick="setHorizon('days_30',this)">30 Days</button>
+        <button class="hor-tab" onclick="setHorizon('days_90',this)">90 Days</button>
+      </div>
+      <div id="predRows">
+        <div style="text-align:center;color:#3A5570;padding:30px">Loading predictions…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Market Forecast -->
+  <div class="tab-panel" id="tab-market">
+    <div class="card">
+      <h2>📈 30-Day Market Demand Scenarios</h2>
+      <div class="scenario-row" id="scenarioCards">
+        <div style="text-align:center;color:#3A5570;padding:30px;grid-column:1/-1">Loading forecast…</div>
+      </div>
+      <div class="chart-wrap" style="height:260px"><canvas id="scenChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>🏷️ Product Demand Breakdown (30 days)</h2>
+      <div class="chart-wrap" style="height:240px"><canvas id="prodChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TAB: Procurement -->
+  <div class="tab-panel" id="tab-procurement">
+    <div class="layout2">
+      <!-- Form -->
+      <div>
+        <div class="card">
+          <h2>🛒 Place Procurement Order</h2>
+          <div class="form-group">
+            <label>Material Type</label>
+            <select id="matType">
+              <option>Hides</option>
+              <option>Chrome Chemicals</option>
+              <option>Dyes</option>
+              <option>Salt</option>
+              <option>Conditioning Agents</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Quantity</label>
+            <input type="number" id="matQty" min="1" placeholder="500" />
+          </div>
+          <div class="form-group">
+            <label>Unit</label>
+            <select id="matUnit">
+              <option value="kg">kg</option>
+              <option value="liters">liters</option>
+              <option value="tonnes">tonnes</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Supplier</label>
+            <input type="text" id="matSupplier" placeholder="e.g. Tanveer Hides Ltd." />
+          </div>
+          <div class="form-group">
+            <label>Urgency</label>
+            <select id="matUrgency">
+              <option value="Urgent">🔴 Urgent (2 days)</option>
+              <option value="High">🟠 High (5 days)</option>
+              <option value="Normal" selected>🔵 Normal (10 days)</option>
+              <option value="Low">🟢 Low (21 days)</option>
+            </select>
+          </div>
+          <button class="btn-order" onclick="placeProc()">📦 Place Procurement Order</button>
+        </div>
+      </div>
+      <!-- History -->
+      <div>
+        <div class="card">
+          <h2>📋 Procurement History</h2>
+          <div style="overflow-y:auto;max-height:500px">
+            <table>
+              <thead>
+                <tr>
+                  <th>Material</th>
+                  <th>Qty</th>
+                  <th>Urgency</th>
+                  <th>Status</th>
+                  <th>Est. Delivery</th>
+                  <th>Cost</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="procBody">
+                <tr>
+                  <td colspan="7" style="text-align:center;color:#3A5570;padding:20px">Loading…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let invChart = null, scenChart = null, prodChart = null;
+    let predData = {}, forecastData = {};
+    let activeHorizon = 'days_7';
+
+    function showTab(id, el) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('tab-' + id).classList.add('active');
+    }
+    function setHorizon(h, el) {
+      activeHorizon = h;
+      document.querySelectorAll('.hor-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      renderPredRows();
+    }
+
+    const MAT_COLORS = { 'Hides': '#3B9EFF', 'Chrome Chemicals': '#AA44FF', 'Dyes': '#FF6677', 'Salt': '#FFAA44', 'Conditioning Agents': '#22DD77' };
+    const INV_COLORS = { 'Hides': '#3B9EFF', 'Chrome Chemicals': '#AA44FF', 'Dyes': '#FF6677', 'Salt': '#FFAA44', 'Conditioning Agents': '#22DD77' };
+
+    function levelColor(days) { if (days < 7) return '#FF4455'; if (days < 21) return '#FFAA44'; return '#22DD77'; }
+    function pctOfMin(qty, min) { return Math.min(200, Math.round(qty / Math.max(min, 1) * 100)); }
+
+    function renderInventory(inv) {
+      const pct = inv.map(i => pctOfMin(i.quantity, i.min_stock));
+      document.getElementById('invCards').innerHTML = inv.map((i, idx) => {
+        const p = pct[idx]; const c = p < 80 ? '#FF6677' : p < 120 ? '#FFAA44' : '#22DD77';
+        const border = `background:${c}`;
+        return `<div class="inv-card" style="border-color:${c}22">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${c};border-radius:18px 18px 0 0"></div>
+      <div class="inv-mat">${i.material_type}</div>
+      <div class="inv-qty" style="color:${c}">${i.quantity.toLocaleString()}</div>
+      <div class="inv-unit">${i.unit}</div>
+      <div class="inv-bar"><div class="inv-bar-fill" style="width:${Math.min(p, 100)}%;background:${c}"></div></div>
+      <div class="inv-warn" style="color:${c}">${p < 80 ? '⚠️ Below Min Stock' : p > 150 ? '✅ Well Stocked' : 'ℹ️ Adequate'}</div>
+      <div style="font-size:.67rem;color:#3A5570;margin-top:4px">Min: ${i.min_stock} ${i.unit}</div>
+    </div>`;
+      }).join('');
+
+      if (invChart) invChart.destroy();
+      invChart = new Chart(document.getElementById('invChart'), {
+        type: 'bar',
+        data: {
+          labels: inv.map(i => i.material_type), datasets: [
+            { label: 'Current Stock', data: inv.map(i => i.quantity), backgroundColor: inv.map(i => INV_COLORS[i.material_type] || '#3B9EFF'), borderRadius: 6, borderWidth: 0 },
+            { label: 'Min Stock', data: inv.map(i => i.min_stock), backgroundColor: 'rgba(255,68,85,.25)', borderColor: '#FF4455', borderWidth: 1, borderRadius: 6 }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#8AAED0', font: { size: 11 } } } }, scales: { x: { ticks: { color: '#6A8FAD', font: { size: 11 } }, grid: { display: false } }, y: { ticks: { color: '#6A8FAD' }, grid: { color: 'rgba(59,158,255,.07)' } } } }
+      });
+    }
+
+    function renderPredRows() {
+      const horizon = predData[activeHorizon] || {};
+      const rows = Object.values(horizon);
+      if (!rows.length) { document.getElementById('predRows').innerHTML = '<div style="text-align:center;color:#3A5570;padding:30px">No prediction data</div>'; return; }
+      document.getElementById('predRows').innerHTML = rows.map(r => {
+        const c = r.shortfall > 0 ? '#FF4455' : r.days_of_stock < 21 ? '#FFAA44' : '#22DD77';
+        return `<div class="pred-row">
+      <div class="pred-top">
+        <div class="pred-mat">${r.material || r.material_type || '—'} <span style="font-size:.72rem;color:#5A7A9D">(${r.unit || 'kg'})</span></div>
+        <span class="badge" style="background:${c}22;border:1px solid ${c}55;color:${c}">${r.shortfall > 0 ? '⚠️ Reorder' : '✅ OK'}</span>
+      </div>
+      <div class="pred-cols">
+        <div class="pred-col"><div class="pred-label">Needed</div><div class="pred-val" style="color:#7BD4FF">${r.total_needed}</div></div>
+        <div class="pred-col"><div class="pred-label">Current</div><div class="pred-val">${r.current_stock}</div></div>
+        <div class="pred-col"><div class="pred-label">Shortfall</div><div class="pred-val" style="color:${r.shortfall > 0 ? '#FF4455' : '#22DD77'}">${r.shortfall}</div></div>
+        <div class="pred-col"><div class="pred-label">Days of Stock</div><div class="pred-val" style="color:${levelColor(r.days_of_stock)}">${r.days_of_stock > 900 ? '∞' : r.days_of_stock + 'd'}</div></div>
+      </div>
+      ${r.shortfall > 0 ? `<div style="margin-top:10px;padding:8px;background:rgba(255,68,85,.06);border-radius:8px;font-size:.74rem;color:#FF8888">🛒 Recommended order: <strong>${r.order_quantity} ${r.unit || 'kg'}</strong></div>` : ''}
+    </div>`;
+      }).join('');
+    }
+
+    function renderMarket(data) {
+      const sc = data.scenarios || {};
+      const sum = data.summary || {};
+      document.getElementById('scenarioCards').innerHTML = `
+    <div class="sc-card sc-base">
+      <div class="sc-label" style="color:#7BD4FF">📊 Base Case</div>
+      <div class="sc-total" style="color:#7BD4FF">${(sc.base?.total_30d || 0).toLocaleString()}</div>
+      <div class="sc-avg">Avg ${sc.base?.avg_daily || 0} units/day</div>
+    </div>
+    <div class="sc-card sc-bull">
+      <div class="sc-label" style="color:#22DD77">🚀 Bullish</div>
+      <div class="sc-total" style="color:#22DD77">${(sc.bullish?.total_30d || 0).toLocaleString()}</div>
+      <div class="sc-avg">Avg ${sc.bullish?.avg_daily || 0} units/day</div>
+    </div>
+    <div class="sc-card sc-bear">
+      <div class="sc-label" style="color:#FF6677">📉 Bearish</div>
+      <div class="sc-total" style="color:#FF6677">${(sc.bearish?.total_30d || 0).toLocaleString()}</div>
+      <div class="sc-avg">Avg ${sc.bearish?.avg_daily || 0} units/day</div>
+    </div>
+  `;
+      // Scenario line chart
+      const dates = data.dates || [];
+      if (scenChart) scenChart.destroy();
+      scenChart = new Chart(document.getElementById('scenChart'), {
+        type: 'line',
+        data: {
+          labels: dates, datasets: [
+            { label: 'Base', data: sc.base?.daily_demand || [], borderColor: '#3B9EFF', backgroundColor: 'rgba(59,158,255,.04)', tension: .4, borderWidth: 2, pointRadius: 0 },
+            { label: 'Bullish', data: sc.bullish?.daily_demand || [], borderColor: '#22DD77', backgroundColor: 'rgba(34,221,119,.04)', tension: .4, borderWidth: 2, pointRadius: 0 },
+            { label: 'Bearish', data: sc.bearish?.daily_demand || [], borderColor: '#FF6677', backgroundColor: 'rgba(255,68,85,.04)', tension: .4, borderWidth: 2, pointRadius: 0 },
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#8AAED0', font: { size: 11 } } } }, scales: { x: { ticks: { color: '#6A8FAD', font: { size: 10 }, maxTicksLimit: 8 }, grid: { color: 'rgba(59,158,255,.05)' } }, y: { ticks: { color: '#6A8FAD' }, grid: { color: 'rgba(59,158,255,.07)' } } } }
+      });
+      // Product breakdown bar
+      const pb = data.product_breakdown || {};
+      const pbLabels = Object.keys(pb);
+      const pbVals = pbLabels.map(k => pb[k].total_30d || 0);
+      if (prodChart) prodChart.destroy();
+      prodChart = new Chart(document.getElementById('prodChart'), {
+        type: 'bar',
+        data: { labels: pbLabels, datasets: [{ label: '30-Day Demand', data: pbVals, backgroundColor: ['#3B9EFF55', '#AA44FF55', '#22DD7755', '#FFAA4455', '#FF667755', '#44FFDD55'], borderColor: ['#3B9EFF', '#AA44FF', '#22DD77', '#FFAA44', '#FF6677', '#44FFDD'], borderWidth: 1, borderRadius: 6 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#6A8FAD', font: { size: 11 } }, grid: { display: false } }, y: { ticks: { color: '#6A8FAD' }, grid: { color: 'rgba(59,158,255,.07)' } } } }
+      });
+    }
+
+    function renderProcHistory(orders) {
+      const b = document.getElementById('procBody');
+      if (!orders.length) { b.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#3A5570;padding:20px">No procurement orders yet</td></tr>'; return; }
+      b.innerHTML = orders.map(o => `<tr>
+    <td style="font-weight:600">${o.material_type}</td>
+    <td>${o.quantity} ${o.unit}</td>
+    <td><span class="badge b-${(o.urgency || 'normal').toLowerCase()}">${o.urgency}</span></td>
+    <td><span class="badge ${o.status === 'delivered' ? 'b-delivered' : 'b-ordered'}">${o.status}</span></td>
+    <td style="font-size:.76rem;color:#5A7A9D">${o.estimated_delivery || '—'}</td>
+    <td style="color:#22DD77;font-weight:600">$${(o.cost || 0).toLocaleString()}</td>
+    <td>${o.status === 'ordered' ? `<button class="btn-receive" onclick="receive(${o.id})">✅ Receive</button>` : ''}</td>
+  </tr>`).join('');
+    }
+
+    async function placeProc() {
+      const mat = document.getElementById('matType').value;
+      const qty = parseFloat(document.getElementById('matQty').value) || 0;
+      if (qty <= 0) { showToast('⚠️ Enter valid quantity', '#FFAA44'); return; }
+      const r = await fetch('/api/raw_material/order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ material_type: mat, quantity: qty, unit: document.getElementById('matUnit').value, supplier: document.getElementById('matSupplier').value, urgency: document.getElementById('matUrgency').value }) });
+      const d = await r.json();
+      if (d.success) { showToast('✅ ' + d.message); loadProcHistory(); }
+      else showToast('❌ ' + (d.error || 'Failed'), '#FF4455');
+    }
+    async function receive(id) {
+      const r = await fetch(`/api/raw_material/receive/${id}`, { method: 'POST' });
+      const d = await r.json();
+      if (d.success) { showToast('✅ ' + d.message); loadAll(); }
+      else showToast('❌ ' + (d.error || 'Failed'), '#FF4455');
+    }
+
+    async function loadAll() {
+      const [inv, preds, market, proc] = await Promise.all([
+        fetch('/api/raw_material/inventory').then(r => r.json()).catch(() => []),
+        fetch('/api/raw_material/needs').then(r => r.json()).catch(() => ({})),
+        fetch('/api/market/forecast').then(r => r.json()).catch(() => ({})),
+        fetch('/api/raw_material/orders').then(r => r.json()).catch(() => [])
+      ]);
+      renderInventory(inv);
+      predData = preds; renderPredRows();
+      forecastData = market; renderMarket(market);
+      renderProcHistory(proc);
+    }
+    async function loadProcHistory() {
+      const proc = await fetch('/api/raw_material/orders').then(r => r.json()).catch(() => []);
+      renderProcHistory(proc);
+    }
+
+    function showToast(msg, color = '#22DD77') { const t = document.getElementById('toast'); t.textContent = msg; t.style.borderColor = color; t.style.color = color; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3500); }
+
+    loadAll(); setInterval(loadAll, 15000);
+  </script>
+</body>
+
+</html>

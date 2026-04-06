@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0; padding: 0; font-family: 'Inter', sans-serif;
+            background: #0f172a; color: white;
+        }
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255, 255, 255, 0.05); padding: 20px 40px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .header h2 { margin: 0; font-weight: 800; color: #f8fafc; }
+        .header a { color: #f1f5f9; text-decoration: none; padding: 8px 16px; background: rgba(255,255,255,0.1); border-radius: 6px; font-size: 0.9rem;}
+        .header a:hover { background: rgba(255,255,255,0.2); }
+        
+        .container { padding: 40px; max-width: 600px; margin: 0 auto; }
+        h3 { font-size: 1.25rem; margin-bottom: 24px; color: #cbd5e1; }
+        
+        .card {
+            background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+            padding: 32px; text-align: center; margin-bottom: 24px;
+        }
+        .tag { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; background: #10b981; margin-bottom: 16px; }
+        .machine-name { font-size: 2rem; font-weight: 800; color: #3b82f6; margin-bottom: 8px; }
+        .machine-id { color: #94a3b8; font-size: 1rem; }
+        
+        .btn {
+            width: 100%; padding: 16px; background: #8b5cf6; border: none;
+            color: white; font-weight: 600; font-size: 1.1rem; cursor: pointer; transition: 0.2s; border-radius: 8px;
+            margin-top: 10px;
+        }
+        .btn:hover { background: #7c3aed; }
+        .btn:disabled { background: #4c1d95; color: #9ca3af; cursor: not-allowed; }
+        
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>👷 Worker Portal</h2>
+        <span>Operator: <strong>{{ name }} ({{ worker_id }})</strong>  <a href="/logout" style="margin-left:15px;">Log Out</a></span>
+    </div>
+
+    <div class="container">
+        <h3>Current Assignment</h3>
+        <div class="card" id="assignmentCard">
+            <div class="tag">Active Shift</div>
+            <div class="machine-name" id="machineName">Scanning...</div>
+            <div class="machine-id" id="machineId">Locating AI Assignment...</div>
+            
+            <div style="margin-top: 20px; text-align: left; background: #0f172a; padding: 15px; border-radius: 8px;">
+                <p style="margin: 5px 0; font-size: 0.9rem; color: #cbd5e1;"><strong>Reason:</strong> <span id="assignReason">...</span></p>
+                <p style="margin: 5px 0; font-size: 0.9rem; color: #cbd5e1;"><strong>Time Spent:</strong> <span id="timeSpent">0</span>s</p>
+                <p style="margin: 5px 0; font-size: 0.9rem; color: #cbd5e1;"><strong>Previous Machine:</strong> <span id="prevMachine">None</span> (<span id="prevDuration">0</span>s)</p>
+            </div>
+        </div>
+
+        <button class="btn" id="otBtn" onclick="applyOvertime()">⏱️ Apply for Overtime</button>
+        <p style="color:#64748b; font-size:0.85rem; text-align:center; margin-top:16px;">
+            Overtime application keeps your profile "Present" in the global AI allocation matrix so you continue receiving machine assignments after hours.
+        </p>
+    </div>
+
+    <script>
+        const workerId = "{{ worker_id }}";
+
+        async function fetchAssignment() {
+            try {
+                const res = await fetch(`/api/worker_info/${workerId}`);
+                const data = await res.json();
+                
+                const mName = document.getElementById('machineName');
+                const mId = document.getElementById('machineId');
+                const rReason = document.getElementById('assignReason');
+                const rTime = document.getElementById('timeSpent');
+                const rPrev = document.getElementById('prevMachine');
+                const rPrevDur = document.getElementById('prevDuration');
+                
+                if (data.current_machine && data.current_machine !== "None") {
+                    mName.innerText = data.current_machine.charAt(0).toUpperCase() + data.current_machine.slice(1) + " Station";
+                    mId.innerText = "Match Confidence: " + (data.match_percent * 100).toFixed(0) + "%";
+                    mName.style.color = "#3b82f6";
+                } else {
+                    mName.innerText = "Standby Mode";
+                    mId.innerText = "No active machine assigned currently. Please wait in the break room.";
+                    mName.style.color = "#94a3b8";
+                }
+
+                rReason.innerText = data.reason || "N/A";
+                // simple formatting of reason: preserve newlines
+                rReason.innerHTML = (data.reason || "N/A").replace(/\n/g, "<br>");
+                
+                rTime.innerText = Math.floor(data.time_spent_seconds);
+                rPrev.innerText = data.previous_machine;
+                rPrevDur.innerText = Math.floor(data.previous_duration);
+
+            } catch(e) { console.error("Error fetching worker info", e); }
+        }
+
+        async function applyOvertime() {
+            try {
+                const res = await fetch('/api/overtime', { method: 'POST' });
+                const data = await res.json();
+                if(data.success) {
+                    const btn = document.getElementById('otBtn');
+                    btn.innerText = "✅ Overtime Approved / Logged";
+                    btn.disabled = true;
+                } else {
+                    alert('Error applying for overtime');
+                }
+            } catch(e) {
+                alert('Connection error');
+            }
+        }
+
+        // Poll every 4 seconds to catch dynamic AI reassignments
+        setInterval(fetchAssignment, 4000);
+        fetchAssignment();
+    </script>
+</body>
+</html>

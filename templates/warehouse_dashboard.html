@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Warehouse Dashboard · Neural Factory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #020C18, #071428 55%, #0D1F3C);
+      color: #D0E8FF
+    }
+
+    /* Navbar */
+    .navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 32px;
+      background: rgba(5, 16, 38, 0.85);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(59, 158, 255, 0.15);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .nav-logo {
+      font-size: 1.1rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #3B9EFF, #AA44FF);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 16px;
+    }
+
+    .nav-links a {
+      color: #8AAED0;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 20px;
+      transition: all 0.2s;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      background: rgba(59, 158, 255, 0.15);
+      color: #7BD4FF;
+    }
+
+    .logout-btn {
+      background: rgba(20, 35, 55, 0.9);
+      border: 1px solid rgba(255, 80, 100, 0.6);
+      padding: 6px 16px;
+      border-radius: 48px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+      color: #FFB7C5;
+      font-size: 0.85rem;
+      text-decoration: none;
+    }
+
+    .logout-btn:hover {
+      background: #FF3366;
+      color: white;
+      border-color: white;
+      transform: scale(0.97);
+      box-shadow: 0 0 15px #FF3366;
+    }
+
+    .page-hero {
+      text-align: center;
+      padding: 40px 20px 28px
+    }
+
+    .page-hero h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #3B9EFF, #AA44FF);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent
+    }
+
+    .page-hero p {
+      color: #6A8FAD;
+      margin-top: 6px
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      padding: 0 32px 28px;
+      max-width: 1200px;
+      margin: 0 auto
+    }
+
+    .stat {
+      background: rgba(10, 22, 44, .8);
+      border: 1px solid rgba(59, 158, 255, .12);
+      border-radius: 16px;
+      padding: 20px 24px;
+      text-align: center
+    }
+
+    .stat-val {
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: #7BD4FF
+    }
+
+    .stat-lab {
+      font-size: .72rem;
+      font-weight: 600;
+      color: #4A6A8A;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: .06em
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 24px;
+      padding: 0 32px 60px;
+      max-width: 1200px;
+      margin: 0 auto
+    }
+
+    .card {
+      background: rgba(10, 22, 44, .75);
+      border: 1px solid rgba(59, 158, 255, .12);
+      border-radius: 20px;
+      padding: 26px;
+      backdrop-filter: blur(12px);
+      margin-bottom: 20px
+    }
+
+    .card h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #7BD4FF;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    /* Stock gauges */
+    .gauge-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px
+    }
+
+    .gauge-item {
+      text-align: center;
+      background: rgba(5, 15, 35, .7);
+      border-radius: 16px;
+      padding: 18px 12px
+    }
+
+    .gauge-label {
+      font-size: .76rem;
+      font-weight: 700;
+      color: #6A8FAD;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: .06em
+    }
+
+    .gauge-ring {
+      width: 90px;
+      height: 90px;
+      margin: 0 auto 10px;
+      position: relative
+    }
+
+    .gauge-ring svg {
+      transform: rotate(-90deg)
+    }
+
+    .gauge-ring .track {
+      fill: none;
+      stroke: rgba(59, 158, 255, .1);
+      stroke-width: 8
+    }
+
+    .gauge-ring .fill {
+      fill: none;
+      stroke-width: 8;
+      stroke-linecap: round;
+      transition: stroke-dasharray .6s ease
+    }
+
+    .gauge-qty {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: .9rem;
+      font-weight: 800;
+      color: #D0E8FF
+    }
+
+    .gauge-cap {
+      font-size: .68rem;
+      color: #4A6A8A;
+      margin-top: 2px
+    }
+
+    /* Shipments table */
+    table {
+      width: 100%;
+      border-collapse: collapse
+    }
+
+    th {
+      font-size: .7rem;
+      font-weight: 700;
+      color: #4A6A8A;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid rgba(59, 158, 255, .1)
+    }
+
+    td {
+      font-size: .82rem;
+      color: #C0D8F0;
+      padding: 11px 14px;
+      border-bottom: 1px solid rgba(59, 158, 255, .07)
+    }
+
+    tr:hover td {
+      background: rgba(59, 158, 255, .04)
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: .7rem;
+      font-weight: 700
+    }
+
+    .b-transit {
+      background: rgba(255, 170, 68, .12);
+      border: 1px solid rgba(255, 170, 68, .3);
+      color: #FFAA44
+    }
+
+    .b-delivered {
+      background: rgba(34, 221, 119, .12);
+      border: 1px solid rgba(34, 221, 119, .3);
+      color: #22DD77
+    }
+
+    .b-pending {
+      background: rgba(59, 158, 255, .12);
+      border: 1px solid rgba(59, 158, 255, .3);
+      color: #7BD4FF
+    }
+
+    /* Manual update */
+    .update-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px
+    }
+
+    select,
+    input {
+      background: rgba(5, 15, 35, .8);
+      border: 1px solid rgba(59, 158, 255, .2);
+      border-radius: 10px;
+      color: #D0E8FF;
+      font-family: 'Inter', sans-serif;
+      font-size: .88rem;
+      padding: 10px 14px;
+      outline: none
+    }
+
+    select:focus,
+    input:focus {
+      border-color: #3B9EFF
+    }
+
+    select option {
+      background: #071428
+    }
+
+    .btn-update {
+      padding: 11px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #3B9EFF, #8844FF);
+      color: #fff;
+      font-size: .85rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all .2s
+    }
+
+    .btn-update:hover {
+      filter: brightness(1.1)
+    }
+
+    .chart-wrap {
+      height: 220px;
+      position: relative
+    }
+
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px
+    }
+
+    .bar-label {
+      font-size: .75rem;
+      color: #6A8FAD;
+      width: 110px;
+      text-align: right;
+      flex-shrink: 0
+    }
+
+    .bar-track {
+      flex: 1;
+      height: 16px;
+      background: rgba(59, 158, 255, .08);
+      border-radius: 8px;
+      overflow: hidden
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 8px;
+      transition: width .6s ease
+    }
+
+    .bar-qty {
+      font-size: .75rem;
+      color: #8AAED0;
+      width: 50px
+    }
+
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(5, 15, 35, .95);
+      border: 1px solid #22DD77;
+      border-radius: 12px;
+      padding: 12px 20px;
+      color: #22DD77;
+      font-size: .85rem;
+      font-weight: 600;
+      z-index: 999;
+      transform: translateX(120%);
+      transition: transform .3s
+    }
+
+    .toast.show {
+      transform: translateX(0)
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar">
+    <div class="nav-logo">⚡ Neural Factory</div>
+    <div class="nav-links">
+      <a href="/">Dashboard</a>
+      <a href="/orders_portal">Orders</a>
+      <a href="/place_order">Place Order</a>
+      <a href="/warehouse_dashboard" class="active">Warehouse</a>
+      <a href="/raw_material_portal">Raw Materials</a>
+      <a href="/logout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="page-hero">
+    <h1>🏭 Warehouse Dashboard</h1>
+    <p>Real-time stock levels, inbound shipments, and capacity utilisation across all product zones</p>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-val" id="sTotalItems">–</div>
+      <div class="stat-lab">Total Items in Stock</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="sShipments" style="color:#FFAA44">–</div>
+      <div class="stat-lab">Shipments Today</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="sZones" style="color:#AA44FF">6</div>
+      <div class="stat-lab">Product Zones</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="sUtilisation" style="color:#22DD77">–</div>
+      <div class="stat-lab">Avg. Utilisation</div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- LEFT -->
+    <div>
+      <div class="card">
+        <h2>📦 Stock Levels by Product</h2>
+        <div class="gauge-grid" id="gaugeGrid">
+          <div style="text-align:center;color:#3A5570;padding:20px;grid-column:1/-1">Loading…</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📊 Stock Visualisation</h2>
+        <div id="stockBars" style="padding:6px 0"></div>
+      </div>
+
+      <div class="card">
+        <h2>🚚 Recent Shipments</h2>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Order Ref</th>
+                <th>Customer</th>
+                <th>Product</th>
+                <th>Qty</th>
+                <th>Zone</th>
+                <th>Status</th>
+                <th>Shipped</th>
+              </tr>
+            </thead>
+            <tbody id="shipBody">
+              <tr>
+                <td colspan="7" style="text-align:center;color:#3A5570;padding:24px">Loading…</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div>
+      <div class="card">
+        <h2>📈 Stock Distribution</h2>
+        <div class="chart-wrap"><canvas id="stockChart"></canvas></div>
+      </div>
+
+      <div class="card">
+        <h2>✏️ Manual Stock Update</h2>
+        <div class="update-form">
+          <div>
+            <label style="font-size:.74rem;color:#5A7A9D;display:block;margin-bottom:5px">Product Type</label>
+            <select id="updProd">
+              <option>Belt</option>
+              <option>Bag</option>
+              <option>Shoe Leather</option>
+              <option>Jacket Leather</option>
+              <option>Wallet</option>
+              <option>Custom</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:.74rem;color:#5A7A9D;display:block;margin-bottom:5px">Quantity</label>
+            <input type="number" id="updQty" min="0" placeholder="0" />
+          </div>
+          <div>
+            <label style="font-size:.74rem;color:#5A7A9D;display:block;margin-bottom:5px">Operation</label>
+            <select id="updOp">
+              <option value="add">➕ Add to stock</option>
+              <option value="subtract">➖ Remove from stock</option>
+              <option value="set">📌 Set exact value</option>
+            </select>
+          </div>
+          <button class="btn-update" onclick="updateStock()">Apply Update</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script>
+    let stockChart = null;
+    const COLORS = ['#3B9EFF', '#AA44FF', '#22DD77', '#FFAA44', '#FF6677', '#44FFDD'];
+    const MAX_CAP = 5000;
+
+    function pct(q) { return Math.min(100, Math.round(q / MAX_CAP * 100)) }
+
+    function colorForPct(p) {
+      if (p < 20) return '#FF6677';
+      if (p < 50) return '#FFAA44';
+      return '#22DD77';
+    }
+
+    function renderGauges(stock) {
+      const g = document.getElementById('gaugeGrid');
+      const r = 45; const circ = 2 * Math.PI * r;
+      g.innerHTML = stock.map((s, i) => {
+        const p = pct(s.quantity);
+        const dash = circ * (p / 100);
+        const c = colorForPct(p);
+        return `<div class="gauge-item">
+      <div class="gauge-label">${s.product_type}</div>
+      <div class="gauge-ring">
+        <svg width="90" height="90" viewBox="0 0 100 100">
+          <circle class="track" cx="50" cy="50" r="${r}"/>
+          <circle class="fill" cx="50" cy="50" r="${r}" stroke="${c}"
+            stroke-dasharray="${dash.toFixed(1)} ${(circ - dash).toFixed(1)}"/>
+        </svg>
+        <div class="gauge-qty">${s.quantity.toLocaleString()}</div>
+      </div>
+      <div class="gauge-cap" style="color:${c}">${p}% full</div>
+      <div style="font-size:.68rem;color:#3A5570">Cap: ${MAX_CAP.toLocaleString()}</div>
+    </div>`;
+      }).join('');
+    }
+
+    function renderBars(stock) {
+      const maxQ = Math.max(...stock.map(s => s.quantity), 1);
+      document.getElementById('stockBars').innerHTML = stock.map((s, i) => {
+        const w = Math.round(s.quantity / maxQ * 100);
+        return `<div class="bar-row">
+      <div class="bar-label">${s.product_type}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${w}%;background:${COLORS[i % 6]}55;border-right:2px solid ${COLORS[i % 6]}"></div></div>
+      <div class="bar-qty">${s.quantity.toLocaleString()}</div>
+    </div>`;
+      }).join('');
+    }
+
+    function renderChart(stock) {
+      if (stockChart) stockChart.destroy();
+      stockChart = new Chart(document.getElementById('stockChart'), {
+        type: 'doughnut',
+        data: {
+          labels: stock.map(s => s.product_type),
+          datasets: [{ data: stock.map(s => s.quantity || 0), backgroundColor: COLORS, borderWidth: 0 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#8AAED0', font: { size: 11 } } } }
+        }
+      });
+    }
+
+    function renderShipments(ships) {
+      const tbody = document.getElementById('shipBody');
+      if (!ships.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#3A5570;padding:24px">No shipments yet</td></tr>'; return; }
+      tbody.innerHTML = ships.map(s => `<tr>
+    <td style="color:#7BD4FF;font-weight:600">${s.order_ref || '—'}</td>
+    <td>${s.customer_name || '—'}</td>
+    <td>${s.product_type || '—'}</td>
+    <td><strong>${(s.quantity || 0).toLocaleString()}</strong></td>
+    <td><span style="color:#CC77FF">${s.warehouse_zone || '—'}</span></td>
+    <td><span class="badge ${s.status === 'delivered' ? 'b-delivered' : s.status === 'in_transit' ? 'b-transit' : 'b-pending'}">${s.status}</span></td>
+    <td style="font-size:.76rem;color:#5A7A9D">${s.shipped_at ? new Date(s.shipped_at).toLocaleDateString() : '—'}</td>
+  </tr>`).join('');
+    }
+
+    function updateStats(data) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const todayShips = (data.recent_shipments || []).filter(s => s.shipped_at && s.shipped_at.startsWith(todayStr)).length;
+      const avgUtil = Math.round((data.stock || []).reduce((a, s) => a + pct(s.quantity), 0) / Math.max((data.stock || []).length, 1));
+      document.getElementById('sTotalItems').textContent = (data.total_items || 0).toLocaleString();
+      document.getElementById('sShipments').textContent = todayShips;
+      document.getElementById('sUtilisation').textContent = avgUtil + '%';
+    }
+
+    async function load() {
+      const d = await fetch('/api/warehouse').then(r => r.json()).catch(() => ({ stock: [], recent_shipments: [], total_items: 0 }));
+      renderGauges(d.stock || []);
+      renderBars(d.stock || []);
+      renderChart(d.stock || []);
+      renderShipments(d.recent_shipments || []);
+      updateStats(d);
+    }
+
+    async function updateStock() {
+      const prod = document.getElementById('updProd').value;
+      const qty = parseInt(document.getElementById('updQty').value) || 0;
+      const op = document.getElementById('updOp').value;
+      if (qty < 0) { showToast('⚠️ Quantity must be ≥ 0', '#FFAA44'); return; }
+      const r = await fetch('/api/warehouse/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_type: prod, quantity: qty, operation: op }) });
+      const d = await r.json();
+      if (d.success) { showToast('✅ Stock updated'); load(); }
+      else showToast('❌ ' + (d.error || 'Failed'), '#FF4455');
+    }
+
+    function showToast(msg, color = '#22DD77') { const t = document.getElementById('toast'); t.textContent = msg; t.style.borderColor = color; t.style.color = color; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3500); }
+
+    load(); setInterval(load, 10000);
+  </script>
+</body>
+
+</html>

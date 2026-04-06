@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Factory Login</title>
+    <!-- Modern typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+        }
+
+        .login-box {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 16px;
+            width: 320px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        h2 {
+            margin-top: 0;
+            margin-bottom: 24px;
+            font-weight: 800;
+            font-size: 1.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        input,
+        select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        option {
+            background: #1e293b;
+            color: white;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .error {
+            color: #f87171;
+            font-size: 0.85rem;
+            margin-top: 15px;
+            min-height: 20px;
+        }
+
+        .badge-hint {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-box">
+        <h2>Terminal Access</h2>
+        <div class="input-group">
+            <label>ID Badge Number</label>
+            <input type="text" id="userId" placeholder="e.g., W001 or M001" required autocomplete="off">
+        </div>
+        <div class="input-group">
+            <label>Access Role</label>
+            <select id="userRole">
+                <option value="admin">Operations Director (Admin)</option>
+                <option value="worker">Production Line Worker</option>
+                <option value="mechanic">Maintenance Fleet</option>
+            </select>
+        </div>
+        <button onclick="attemptLogin()">Initialize Session</button>
+        <div class="error" id="errorMsg"></div>
+        <div class="badge-hint">Hint: Try ADMIN, W001, or M001</div>
+    </div>
+
+    <script>
+        async function attemptLogin() {
+            const id = document.getElementById('userId').value;
+            const role = document.getElementById('userRole').value;
+            const err = document.getElementById('errorMsg');
+            err.innerText = "";
+
+            if (!id) { err.innerText = "Please scan or enter your badge ID"; return; }
+
+            const btn = document.querySelector('button');
+            const originalText = btn.innerText;
+            btn.innerText = "Authenticating...";
+            btn.style.opacity = "0.7";
+
+            try {
+                const res = await fetch('/api/auth', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, role })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window.location.href = data.redirect;
+                } else {
+                    err.innerText = data.message;
+                    btn.innerText = originalText;
+                    btn.style.opacity = "1";
+                }
+            } catch (e) {
+                err.innerText = "Connection lost to central server";
+                btn.innerText = originalText;
+                btn.style.opacity = "1";
+            }
+        }
+
+        document.getElementById('userId').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') attemptLogin();
+        });
+    </script>
+</body>
+
+</html>

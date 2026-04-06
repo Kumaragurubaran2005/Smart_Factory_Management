@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>NEURAL DYNAMO | Smart Factory Twin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #020C18 0%, #071428 60%, #0D1F3C 100%);
+            color: #D0E8FF;
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 32px;
+            background: rgba(5, 16, 38, 0.85);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(59, 158, 255, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .nav-logo {
+            font-size: 1.1rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #3B9EFF, #AA44FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 16px;
+        }
+
+        .nav-links a {
+            color: #8AAED0;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 6px 14px;
+            border-radius: 20px;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            background: rgba(59, 158, 255, 0.15);
+            color: #7BD4FF;
+        }
+
+        .logout-btn {
+            background: rgba(20, 35, 55, 0.9);
+            border: 1px solid rgba(255, 80, 100, 0.6);
+            padding: 6px 16px;
+            border-radius: 48px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #FFB7C5;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+
+        .logout-btn:hover {
+            background: #FF3366;
+            color: white;
+            border-color: white;
+            transform: scale(0.97);
+            box-shadow: 0 0 15px #FF3366;
+        }
+
+        /* Stats row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            padding: 24px 32px 20px;
+        }
+
+        .stat {
+            background: rgba(10, 22, 44, 0.75);
+            border: 1px solid rgba(59, 158, 255, 0.12);
+            border-radius: 16px;
+            padding: 18px 20px;
+            text-align: center;
+            backdrop-filter: blur(8px);
+        }
+
+        .stat-val {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #7BD4FF;
+        }
+
+        .stat-lab {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #4A6A8A;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        /* Main grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+            padding: 0 32px 40px;
+        }
+
+        .card {
+            background: rgba(10, 22, 44, 0.75);
+            border: 1px solid rgba(59, 158, 255, 0.12);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(12px);
+            transition: all 0.2s;
+        }
+
+        .card:hover {
+            border-color: rgba(59, 158, 255, 0.4);
+        }
+
+        .card h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #7BD4FF;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #factory3d {
+            height: 480px;
+            width: 100%;
+            border-radius: 20px;
+            overflow: hidden;
+            background: #03070f;
+            cursor: grab;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .stock-progress {
+            background: #1A2C3C;
+            border-radius: 20px;
+            overflow: hidden;
+            height: 8px;
+            margin: 10px 0 14px;
+        }
+
+        .stock-fill {
+            background: linear-gradient(90deg, #22C55E, #3B9EFF);
+            width: 0%;
+            height: 100%;
+            transition: width 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        .worker-pool {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .worker-item {
+            background: linear-gradient(145deg, #1F3A4F, #112433);
+            padding: 6px 16px;
+            border-radius: 40px;
+            cursor: grab;
+            user-select: none;
+            border: 1px solid #3C8DB0;
+            font-weight: 500;
+            font-size: 0.8rem;
+            transition: 0.1s;
+        }
+
+        .worker-item:active {
+            cursor: grabbing;
+        }
+
+        .dropzone {
+            background: rgba(0, 40, 60, 0.6);
+            border: 2px dashed #00AAFF;
+            border-radius: 28px;
+            padding: 20px;
+            text-align: center;
+            transition: 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .dropzone.drag-over {
+            background: rgba(0, 150, 255, 0.25);
+            border-style: solid;
+        }
+
+        .log-panel {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.7rem;
+            background: rgba(0, 0, 0, 0.45);
+            border-radius: 18px;
+            padding: 8px;
+        }
+
+        .log-entry {
+            border-left: 3px solid #3B9EFF;
+            padding: 4px 8px;
+            margin: 4px 0;
+            font-family: monospace;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 8px 6px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 200, 255, 0.2);
+            font-size: 0.75rem;
+        }
+
+        th {
+            color: #6A8FAD;
+            font-weight: 600;
+        }
+
+        .voice-btn {
+            background: linear-gradient(95deg, #1F3147, #0F1A28);
+            border: 1px solid #3B9EFF;
+            padding: 10px 16px;
+            border-radius: 44px;
+            width: 100%;
+            cursor: pointer;
+            font-weight: bold;
+            color: #D0E8FF;
+            margin-top: 12px;
+        }
+
+        .voice-btn:hover {
+            background: #2B9EFF;
+            color: black;
+            box-shadow: 0 0 12px #2B9EFF;
+        }
+
+        .toast-notify {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: #0F212FDD;
+            backdrop-filter: blur(16px);
+            padding: 10px 20px;
+            border-radius: 60px;
+            border-left: 6px solid #3B9EFF;
+            font-weight: 500;
+            z-index: 1500;
+            animation: fadeSlide 0.3s ease;
+        }
+
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateX(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-top: 3px solid #3B9EFF;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 0.7s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .forecast-row {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .forecast-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 12px;
+            border-radius: 16px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .btn-next {
+            background: linear-gradient(90deg, #FFAA33, #FF7700);
+            border: none;
+            padding: 8px 18px;
+            border-radius: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #000;
+            font-family: 'Inter', sans-serif;
+        }
+
+        @media (max-width: 1000px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-row {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 700px) {
+            .stats-row {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .navbar {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="nav-logo">⚡ Neural Dynamo | HyperFactory Twin</div>
+        <div class="nav-links">
+            <a href="/" class="active">Dashboard</a>
+            <a href="/orders_portal">Orders</a>
+            <a href="/place_order">Place Order</a>
+            <a href="/warehouse_dashboard">Warehouse</a>
+            <a href="/raw_material_portal">Raw Materials</a>
+            <a href="/manual_override">Overrides</a>
+        </div>
+        <button id="logoutButton" class="logout-btn">🚪 Logout</button>
+    </nav>
+
+    <!-- Stats row -->
+    <div class="stats-row">
+        <div class="stat">
+            <div class="stat-val" id="machines">—</div>
+            <div class="stat-lab">Total Machines</div>
+        </div>
+        <div class="stat">
+            <div class="stat-val" id="health">—%</div>
+            <div class="stat-lab">Avg Health</div>
+        </div>
+        <div class="stat">
+            <div class="stat-val" id="critical">—</div>
+            <div class="stat-lab">Critical</div>
+        </div>
+        <div class="stat">
+            <div class="stat-val" id="output">—</div>
+            <div class="stat-lab">Output (prod)</div>
+        </div>
+        <div class="stat">
+            <div class="stat-val" id="fillRate">—%</div>
+            <div class="stat-lab">Fill Rate</div>
+        </div>
+    </div>
+
+    <!-- Forecast card -->
+    <div class="card" style="margin: 0 32px 20px 32px; border-color: rgba(255,180,50,0.5);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <h3 style="color:#FFCC44;">🔮 Deep‑Q Scenario Engine</h3>
+            <button id="nextDayBtn" class="btn-next">🌀 Simulate Next Shift</button>
+        </div>
+        <div class="forecast-row">
+            <div class="forecast-item">
+                <div style="font-size:0.7rem;">📅 Date</div>
+                <div id="fc_date" style="font-weight:700;">—</div>
+            </div>
+            <div class="forecast-item">
+                <div style="font-size:0.7rem;">📊 Demand</div>
+                <div id="fc_demand" style="font-weight:800;color:#66C0FF;">—</div>
+            </div>
+            <div class="forecast-item">
+                <div style="font-size:0.7rem;">📦 Supply</div>
+                <div id="fc_supply" style="font-weight:800;">—</div>
+            </div>
+            <div class="forecast-item">
+                <div style="font-size:0.7rem;">⚙️ Bottleneck</div>
+                <div id="fc_cap" style="font-weight:800;">—</div>
+            </div>
+            <div class="forecast-item">
+                <div style="font-size:0.7rem;">🎯 Max Feasible</div>
+                <div id="fc_feasible" style="font-size:1.2rem;font-weight:800;color:#FFCC66;">—</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- LEFT COLUMN: 3D + Stock + Allocations -->
+        <div>
+            <div class="card" style="padding: 0; overflow: hidden;">
+                <div id="factory3d"></div>
+            </div>
+            <div class="card" style="margin-top: 20px;">
+                <h3>📦 Raw Materials & Stock</h3>
+                <div><strong>Raw Stock:</strong> <span id="rawStock">—</span> units</div>
+                <div class="stock-progress">
+                    <div id="rawStockFill" class="stock-fill"></div>
+                </div>
+                <div><strong>Finished Goods:</strong> <span id="finishedGoods">—</span> units</div>
+                <div class="stock-progress">
+                    <div id="finishedFill" class="stock-fill" style="background:#FFAA55;"></div>
+                </div>
+                <div><strong>Pending Orders:</strong> <span id="pendingOrders">—</span></div>
+                <div><strong>Dispatched:</strong> <span id="dispatched">0</span></div>
+            </div>
+            <div class="card" style="margin-top: 20px;">
+                <h3>⚙️ Neural Allocation Matrix</h3>
+                <div style="overflow-x:auto;">
+                    <table id="allocTable">
+                        <thead>
+                            <tr>
+                                <th>Machine</th>
+                                <th>Neural Operator</th>
+                                <th>Match %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="alloc">
+                            <tr>
+                                <td colspan="3">
+                                    <div class="spinner"></div> Loading...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <canvas id="healthChart" style="height:160px; margin-top:16px;"></canvas>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Workers, Voice, Log -->
+        <div>
+            <div class="card">
+                <h3>🖱️ Smart Assignment (Drag & Drop)</h3>
+                <div id="workers" class="worker-pool">Loading workforce...</div>
+                <div id="machineZone" class="dropzone" data-zone="machine">⬇️ Drop Operator HERE → then select machine
+                </div>
+                <div style="font-size:0.7rem; margin-top:12px;">✨ Tip: Drag worker directly onto 3D machine model for
+                    instant assignment</div>
+            </div>
+            <div class="card" style="margin-top: 20px;">
+                <h3>🎤 Neural Voice Command</h3>
+                <button id="voiceBtn" class="voice-btn">🎙️ Activate Voice Channel</button>
+                <div id="voiceOutput"
+                    style="background:#00000055; border-radius:20px; padding:12px; margin-top:12px; font-size:0.8rem;">
+                    Ready: "assign worker 1 to tanning"</div>
+            </div>
+            <div class="card" style="margin-top: 20px;">
+                <h3>🕒 Activity Log</h3>
+                <div id="logPanel" class="log-panel">
+                    <div class="log-entry">🟢 Neural core online | 3D assets active</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    { "imports": { "three": "https://unpkg.com/three@0.128.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/" } }
+</script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+        // --- API layer (real endpoints, mock fallback if needed) ---
+        let mockMode = false;
+        const mockState = {
+            machines: [
+                { id: "M-101", name: "Tanning Unit", health: 0.82, productivity: 0.75, wear: 18 },
+                { id: "M-102", name: "Drying Chamber", health: 0.64, productivity: 0.52, wear: 42 },
+                { id: "M-103", name: "Finishing Line", health: 0.91, productivity: 0.88, wear: 12 }
+            ],
+            allocations: [
+                { machine_id: "M-101", machine_name: "Tanning Unit", operator: "Elena V.", match_percent: 0.92, machine_health: 0.82 },
+                { machine_id: "M-102", machine_name: "Drying Chamber", operator: "Marcus T.", match_percent: 0.78, machine_health: 0.64 },
+                { machine_id: "M-103", machine_name: "Finishing Line", operator: "Sophia L.", match_percent: 0.96, machine_health: 0.91 }
+            ],
+            workers: [{ id: "W1", name: "Elena V." }, { id: "W2", name: "Marcus T." }, { id: "W3", name: "Sophia L." }, { id: "W4", name: "David K." }],
+            forecast: { date: "2026-04-06", predicted_demand: 1250, supply_limit: 980, process_capacity: 1120, feasible_output: 980, finished_goods: 420, dispatched_goods: 280 }
+        };
+        async function smartFetch(url, opts = {}) {
+            try {
+                const res = await fetch(url, { ...opts, headers: { 'Content-Type': 'application/json', ...opts.headers } });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return await res.json();
+            } catch (e) {
+                if (!mockMode) { console.warn("Backend unreachable, using demo data", e); mockMode = true; addLogEntry("⚠️ Demo mode: simulated data", "info"); }
+                if (url === '/api/forecast') return { ...mockState.forecast };
+                if (url === '/api/forecast/next_day' && opts.method === 'POST') {
+                    mockState.forecast = { ...mockState.forecast, date: new Date().toISOString().slice(0, 10), predicted_demand: Math.floor(Math.random() * 500 + 900) };
+                    return mockState.forecast;
+                }
+                if (url === '/api/stats') {
+                    const total = mockState.machines.length;
+                    const avgHealth = mockState.machines.reduce((a, b) => a + b.health, 0) / total;
+                    return { total_machines: total, avg_health: avgHealth, critical_count: 1, production_output: 874, machines: mockState.machines };
+                }
+                if (url === '/api/alloc') return mockState.allocations;
+                if (url === '/api/workers') return mockState.workers;
+                if (url === '/api/assign' && opts.method === 'POST') return { success: true };
+                if (url === '/api/voice_command') return { message: "Voice command received" };
+                return {};
+            }
+        }
+
+        // DOM elements
+        let machineGroups = new Map(), machinesData = [], allocationMap = new Map(), healthChart = null, currentForecast = null;
+        let rawStock = 0, finishedGoods = 0, dispatched = 0, workersList = [];
+
+        function addLogEntry(msg, type = 'info') {
+            const logDiv = document.getElementById('logPanel');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `${type === 'info' ? 'ℹ️' : '✅'} ${new Date().toLocaleTimeString()} - ${msg}`;
+            logDiv.prepend(entry);
+            if (logDiv.children.length > 28) logDiv.removeChild(logDiv.lastChild);
+        }
+        function showToast(msg) { const t = document.createElement('div'); t.className = 'toast-notify'; t.innerHTML = `🔔 ${msg}`; document.body.appendChild(t); setTimeout(() => t.remove(), 3500); }
+
+        async function fetchForecast() {
+            const data = await smartFetch('/api/forecast');
+            if (data) {
+                rawStock = data.supply_limit ?? 0;
+                finishedGoods = data.finished_goods ?? 0;
+                dispatched = data.dispatched_goods ?? 0;
+                currentForecast = data;
+                document.getElementById('fc_date').innerText = data.date || "—";
+                document.getElementById('fc_demand').innerText = Math.round(data.predicted_demand);
+                document.getElementById('fc_supply').innerText = Math.round(data.supply_limit);
+                document.getElementById('fc_cap').innerText = Math.round(data.process_capacity);
+                document.getElementById('fc_feasible').innerText = Math.round(data.feasible_output);
+                updateStockUI();
+            }
+        }
+        function updateStockUI() {
+            document.getElementById('rawStock').innerText = Math.round(rawStock);
+            document.getElementById('finishedGoods').innerText = Math.round(finishedGoods);
+            const pending = Math.max(0, (currentForecast?.predicted_demand || 0) - dispatched);
+            document.getElementById('pendingOrders').innerText = Math.round(pending);
+            document.getElementById('dispatched').innerText = Math.round(dispatched);
+            document.getElementById('rawStockFill').style.width = `${Math.min(100, (rawStock / (currentForecast?.supply_limit || 1)) * 100)}%`;
+            document.getElementById('finishedFill').style.width = `${Math.min(100, (finishedGoods / (currentForecast?.predicted_demand || 1)) * 100)}%`;
+            const fillRate = (currentForecast?.predicted_demand && currentForecast.predicted_demand > 0) ? (dispatched / currentForecast.predicted_demand) * 100 : 0;
+            document.getElementById('fillRate').innerText = fillRate.toFixed(0) + '%';
+        }
+        async function fetchStats() {
+            const data = await smartFetch('/api/stats');
+            if (data) {
+                document.getElementById('machines').innerText = data.total_machines ?? 0;
+                document.getElementById('health').innerText = ((data.avg_health || 0) * 100).toFixed(1) + '%';
+                document.getElementById('critical').innerText = data.critical_count ?? 0;
+                document.getElementById('output').innerText = data.production_output ?? 0;
+                if (data.machines) {
+                    machinesData = data.machines.map(m => ({ id: m.id, type: m.name, health: m.health, productivity: m.productivity, wear: m.wear || 0 }));
+                    if (machineGroups.size === 0 && machinesData.length) layoutMachines(machinesData);
+                    else for (let m of machinesData) if (machineGroups.has(m.id)) updateMachineVisuals(machineGroups.get(m.id), m.health, m.productivity);
+                }
+            }
+        }
+        async function fetchAllocation() {
+            const data = await smartFetch('/api/alloc');
+            if (data && data.length) {
+                const tbody = document.getElementById('alloc');
+                tbody.innerHTML = '';
+                allocationMap.clear();
+                data.forEach(row => {
+                    allocationMap.set(row.machine_id, row.operator);
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${row.machine_name || row.machine}</td><td>${row.operator}</td><td>${(row.match_percent * 100).toFixed(0)}%<\/td>`;
+                    tbody.appendChild(tr);
+                });
+                for (let [mid, worker] of allocationMap.entries()) {
+                    worker && worker !== "Unassigned" ? addHumanToMachine(mid, worker) : removeHumanFromMachine(mid);
+                }
+                if (healthChart && data.length) {
+                    healthChart.data.datasets[0].data = data.map(r => (r.machine_health || 0.8) * 100);
+                    healthChart.data.labels = data.map(r => r.machine_name || r.machine);
+                    healthChart.update();
+                }
+            }
+        }
+        async function fetchWorkers() {
+            const w = await smartFetch('/api/workers');
+            if (w && w.length) {
+                workersList = w;
+                document.getElementById('workers').innerHTML = w.map(wk => `<div class="worker-item" draggable="true" data-worker-id="${wk.id}" data-worker-name="${wk.name}">👤 ${wk.name}</div>`).join('');
+                attachDragWorkers();
+            }
+        }
+        function attachDragWorkers() {
+            document.querySelectorAll('.worker-item').forEach(el => {
+                el.setAttribute('draggable', 'true');
+                el.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', JSON.stringify({ id: el.getAttribute('data-worker-id'), name: el.getAttribute('data-worker-name') }));
+                    e.dataTransfer.effectAllowed = 'copy';
+                });
+            });
+        }
+        async function triggerNextDay() {
+            const btn = document.getElementById('nextDayBtn');
+            btn.innerHTML = '<span class="spinner"></span> Genning...';
+            const data = await smartFetch('/api/forecast/next_day', { method: 'POST' });
+            if (data) {
+                currentForecast = data;
+                updateStockUI();
+                fetchForecast();
+                addLogEntry(`🌀 New scenario: demand ${Math.round(data.predicted_demand)}`, 'success');
+            }
+            btn.innerText = "🌀 Simulate Next Shift";
+        }
+
+        // --- 3D Machine creation (simplified but realistic) ---
+        function buildTanningUnit() {
+            const g = new THREE.Group();
+            const base = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.4, 1.3), new THREE.MeshPhongMaterial({ color: 0x5A6E7A, shininess: 80 }));
+            base.position.y = -0.2; base.castShadow = true; g.add(base);
+            const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.9, 32), new THREE.MeshPhongMaterial({ color: 0xBD8A5A, shininess: 100 }));
+            drum.position.y = 0.25; drum.castShadow = true; g.add(drum);
+            g.userData = { rotatingParts: [drum] };
+            return g;
+        }
+        function buildDryingChamber() {
+            const g = new THREE.Group();
+            const cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 1.2, 32), new THREE.MeshPhongMaterial({ color: 0x708090, shininess: 100 }));
+            cylinder.position.y = 0.2; cylinder.castShadow = true; g.add(cylinder);
+            g.userData = { rotatingParts: [cylinder] };
+            return g;
+        }
+        function buildFinishingLine() {
+            const g = new THREE.Group();
+            const mainBody = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.5, 1.2), new THREE.MeshPhongMaterial({ color: 0x7C8E9E, shininess: 70 }));
+            mainBody.position.y = 0.0; mainBody.castShadow = true; g.add(mainBody);
+            const rollers = [];
+            for (let i = -0.6; i <= 0.6; i += 0.6) {
+                const roller = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 1.2, 12), new THREE.MeshPhongMaterial({ color: 0xDDAA66, shininess: 120 }));
+                roller.rotation.z = Math.PI / 2; roller.position.set(i, 0.25, 0); roller.castShadow = true; g.add(roller);
+                rollers.push(roller);
+            }
+            g.userData = { rotatingParts: rollers };
+            return g;
+        }
+        function createRealisticMachine(type, health, productivity) {
+            let group;
+            if (type.toLowerCase().includes('tanning')) group = buildTanningUnit();
+            else if (type.toLowerCase().includes('drying')) group = buildDryingChamber();
+            else group = buildFinishingLine();
+            updateMachineVisuals({ group, userData: group.userData }, health, productivity);
+            return group;
+        }
+        function updateMachineVisuals(obj, health, productivity) {
+            const color = new THREE.Color().setHSL(0.55 * health, 1.0, 0.45);
+            obj.group.children.forEach(c => { if (c.isMesh && c.material) c.material.color = color; });
+            obj.productivity = productivity;
+        }
+
+        // Worker animation (simplified)
+        function buildAnimatedWorker(accentHex) {
+            const g = new THREE.Group();
+            const bodyMat = new THREE.MeshLambertMaterial({ color: 0x2255AA });
+            const skinMat = new THREE.MeshLambertMaterial({ color: 0xFFCC99 });
+            const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.11, 0.36, 8), bodyMat);
+            torso.position.y = 0.53; torso.castShadow = true; g.add(torso);
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12), skinMat);
+            head.position.y = 0.82; head.castShadow = true; g.add(head);
+            return g;
+        }
+        function addHumanToMachine(machineId, workerName) {
+            const obj = machineGroups.get(machineId);
+            if (!obj) return;
+            if (obj.humanGroup) scene.remove(obj.humanGroup);
+            const human = buildAnimatedWorker(obj.accentColor);
+            human.position.set(obj.cx, 0, -0.5);
+            scene.add(human);
+            obj.humanGroup = human;
+            const div = document.createElement('div');
+            div.textContent = workerName;
+            div.style.cssText = `color:#fff; font-size:9px; background:#000000cc; padding:2px 8px; border-radius:14px;`;
+            const label = new CSS2DObject(div);
+            label.position.set(obj.cx, 1.1, -0.5);
+            scene.add(label);
+            obj.humanLabel = label;
+        }
+        function removeHumanFromMachine(machineId) {
+            const obj = machineGroups.get(machineId);
+            if (obj?.humanGroup) scene.remove(obj.humanGroup);
+            if (obj?.humanLabel) scene.remove(obj.humanLabel);
+            if (obj) { obj.humanGroup = null; obj.humanLabel = null; }
+        }
+
+        // 3D scene setup
+        const container = document.getElementById('factory3d');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x030812);
+        scene.fog = new THREE.FogExp2(0x030812, 0.008);
+        const camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(0, 10, 20);
+        const renderer3d = new THREE.WebGLRenderer({ antialias: true });
+        renderer3d.setSize(container.clientWidth, container.clientHeight);
+        renderer3d.shadowMap.enabled = true;
+        container.appendChild(renderer3d.domElement);
+        const labelRenderer = new CSS2DRenderer();
+        labelRenderer.setSize(container.clientWidth, container.clientHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.pointerEvents = 'none';
+        container.appendChild(labelRenderer.domElement);
+        const controls = new OrbitControls(camera, renderer3d.domElement);
+        controls.enableDamping = true;
+        controls.target.set(0, 0.8, 0);
+        // Lights
+        const ambient = new THREE.AmbientLight(0x223344, 0.65);
+        scene.add(ambient);
+        const hemiLight = new THREE.HemisphereLight(0x4488aa, 0x224422, 0.5);
+        scene.add(hemiLight);
+        const mainLight = new THREE.DirectionalLight(0xFFF5E0, 1.3);
+        mainLight.position.set(6, 12, 5);
+        mainLight.castShadow = true;
+        mainLight.shadow.mapSize.width = 1024;
+        mainLight.shadow.mapSize.height = 1024;
+        scene.add(mainLight);
+        const fillLight = new THREE.PointLight(0x4488FF, 0.55);
+        fillLight.position.set(0, 3, 2);
+        scene.add(fillLight);
+        const backLight = new THREE.PointLight(0xFF8844, 0.45);
+        backLight.position.set(-2, 3, -5);
+        scene.add(backLight);
+        // Floor
+        const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 20), new THREE.MeshLambertMaterial({ color: 0x060D14 }));
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -0.26;
+        floor.receiveShadow = true;
+        scene.add(floor);
+
+        function layoutMachines(machines) {
+            machineGroups.forEach(obj => { scene.remove(obj.group, obj.label); if (obj.humanGroup) scene.remove(obj.humanGroup); if (obj.humanLabel) scene.remove(obj.humanLabel); });
+            machineGroups.clear();
+            const sorted = [...machines].sort((a, b) => a.id.localeCompare(b.id));
+            const startX = -(sorted.length * 3.5) / 2 + 1.5;
+            sorted.forEach((m, idx) => {
+                const cx = startX + idx * 3.5;
+                const group = createRealisticMachine(m.type, m.health, m.productivity);
+                group.position.set(cx, 0, -0.8);
+                group.castShadow = true;
+                scene.add(group);
+                const div = document.createElement('div');
+                div.innerHTML = `${m.type}<br><span style="font-size:9px;">⚙️ ${(m.health * 100).toFixed(0)}%</span>`;
+                div.style.cssText = `color:#C0E4FF; font-size:11px; background:#0A1422dd; padding:4px 12px; border-radius:24px;`;
+                const label = new CSS2DObject(div);
+                label.position.set(cx, 1.6, -0.8);
+                scene.add(label);
+                machineGroups.set(m.id, { group, label, id: m.id, type: m.type, health: m.health, productivity: m.productivity, cx, accentColor: 0x3B9EFF });
+            });
+            addLogEntry(`🏭 ${sorted.length} machines loaded`, 'success');
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            for (let obj of machineGroups.values()) {
+                if (obj.group.userData.rotatingParts)
+                    obj.group.userData.rotatingParts.forEach(part => part.rotation.z += (obj.productivity || 0.5) * 0.02);
+            }
+            renderer3d.render(scene, camera);
+            labelRenderer.render(scene, camera);
+        }
+        animate();
+        window.addEventListener('resize', () => {
+            const w = container.clientWidth, h = container.clientHeight;
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer3d.setSize(w, h);
+            labelRenderer.setSize(w, h);
+        });
+
+        // Drag-drop on canvas
+        renderer3d.domElement.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; renderer3d.domElement.style.outline = '2px solid #3B9EFF'; });
+        renderer3d.domElement.addEventListener('dragleave', () => renderer3d.domElement.style.outline = '');
+        renderer3d.domElement.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            renderer3d.domElement.style.outline = '';
+            const raw = e.dataTransfer.getData('text/plain');
+            if (!raw) return;
+            const { id: workerId, name } = JSON.parse(raw);
+            const rect = renderer3d.domElement.getBoundingClientRect();
+            const mouse = new THREE.Vector2();
+            mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(Array.from(machineGroups.values()).map(v => v.group), true);
+            if (intersects.length) {
+                for (let [machineId, obj] of machineGroups.entries()) {
+                    if (obj.group === intersects[0].object || obj.group.children.includes(intersects[0].object)) {
+                        const res = await smartFetch('/api/assign', { method: 'POST', body: JSON.stringify({ worker_id: workerId, machine_id: machineId }) });
+                        if (res?.success !== false) {
+                            addLogEntry(`🎯 3D drop: ${name} → ${machineId}`, 'success');
+                            fetchAllocation();
+                            showToast(`✅ ${name} assigned`);
+                        }
+                        break;
+                    }
+                }
+            } else showToast("Drop onto a machine model");
+        });
+
+        // Voice
+        let recognition = null;
+        document.getElementById('voiceBtn').addEventListener('click', () => {
+            if (!('webkitSpeechRecognition' in window)) { alert("Speech unsupported"); return; }
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.onstart = () => document.getElementById('voiceBtn').style.background = "#2B9EFF";
+            recognition.onresult = async (event) => {
+                const cmd = event.results[0][0].transcript;
+                document.getElementById('voiceOutput').innerHTML = `🗣️ "${cmd}"<br>🤖 processing...`;
+                const resp = await smartFetch('/api/voice_command', { method: 'POST', body: JSON.stringify({ command: cmd }) });
+                document.getElementById('voiceOutput').innerHTML = `🗣️ "${cmd}"<br>🤖 ${resp?.message || 'Executed'}`;
+                addLogEntry(`🎙️ Voice: ${cmd}`, 'info');
+            };
+            recognition.onend = () => document.getElementById('voiceBtn').style.background = "";
+            recognition.start();
+        });
+
+        document.getElementById('logoutButton').addEventListener('click', async () => {
+            if (confirm('End session?')) {
+                await smartFetch('/api/logout', { method: 'POST' });
+                window.location.href = '/login';
+            }
+        });
+        document.getElementById('nextDayBtn').addEventListener('click', triggerNextDay);
+        const ctx = document.getElementById('healthChart').getContext('2d');
+        healthChart = new Chart(ctx, { type: 'bar', data: { labels: [], datasets: [{ label: 'Health (%)', data: [], backgroundColor: '#2B9EFF', borderRadius: 10 }] }, options: { responsive: true, maintainAspectRatio: true } });
+        setInterval(() => { fetchForecast(); fetchStats(); fetchAllocation(); fetchWorkers(); }, 4500);
+        fetchForecast(); fetchStats(); fetchAllocation(); fetchWorkers();
+        addLogEntry('✨ Neural Digital Twin | Realistic 3D Machines | Use mouse to orbit', 'success');
+    </script>
+</body>
+
+</html>

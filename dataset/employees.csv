@@ -1,0 +1,116 @@
+worker_id,name,role,overall_skill,skill_tanning,skill_drying,skill_finishing
+W001,Karen Lopez,Operator,67,0,0,0
+W002,Mary Jackson,Operator,76,1,1,1
+W003,John Taylor,Operator,81,1,0,0
+W004,Charles Miller,Operator,70,1,1,0
+W005,James Miller,Operator,72,1,0,1
+W006,Susan Johnson,Operator,90,1,1,1
+W007,Mary Jackson,Operator,67,0,1,0
+W008,Susan Anderson,Operator,88,1,1,1
+W009,Robert Smith,Operator,70,1,1,1
+W010,Barbara Moore,Operator,92,0,0,1
+W011,David Johnson,Operator,91,1,1,1
+W012,John Miller,Operator,69,0,1,1
+W013,William Martin,Operator,66,1,1,1
+W014,Thomas Jackson,Operator,82,1,1,1
+W015,Linda Martin,Operator,96,1,1,1
+W016,Elizabeth Hernandez,Operator,90,0,1,1
+W017,Susan Garcia,Operator,75,1,0,1
+W018,Elizabeth Moore,Operator,66,1,0,0
+W019,Michael Williams,Operator,66,1,1,0
+W020,Richard Garcia,Operator,82,1,1,1
+W021,Jennifer Moore,Operator,70,1,0,1
+W022,Thomas Jones,Operator,97,1,1,1
+W023,Jessica Garcia,Operator,82,1,1,1
+W024,Michael Lopez,Operator,79,0,1,1
+W025,Karen Hernandez,Operator,82,1,1,1
+W026,Barbara Garcia,Operator,96,0,1,1
+W027,Linda Lopez,Operator,64,1,0,1
+W028,Robert Davis,Operator,90,1,0,0
+W029,Michael Taylor,Operator,89,1,1,1
+W030,Mary Rodriguez,Operator,74,0,1,1
+W031,John Martin,Operator,80,1,1,0
+W032,Thomas Moore,Operator,99,0,0,1
+W033,Linda Taylor,Operator,61,0,1,1
+W034,Joseph Gonzalez,Operator,68,1,1,1
+W035,Robert Jackson,Operator,82,1,1,1
+W036,Linda Hernandez,Operator,88,0,0,1
+W037,William Gonzalez,Operator,64,0,1,1
+W038,James Smith,Operator,74,1,1,0
+W039,Linda Williams,Operator,73,1,1,1
+W040,Elizabeth Rodriguez,Operator,93,0,1,1
+W041,Thomas Wilson,Operator,79,1,0,1
+W042,Patricia Rodriguez,Operator,90,1,1,0
+W043,Linda Moore,Operator,89,1,0,0
+W044,Joseph Anderson,Operator,80,1,1,0
+W045,Michael Taylor,Operator,87,0,1,1
+W046,Barbara Garcia,Operator,65,0,0,1
+W047,Michael Jackson,Operator,90,1,0,1
+W048,Joseph Jackson,Operator,74,1,1,0
+W049,Robert Brown,Operator,96,0,1,0
+W050,Linda Miller,Operator,72,0,0,1
+W051,Thomas Taylor,Operator,93,1,1,0
+W052,Patricia Rodriguez,Operator,86,0,1,1
+W053,Karen Smith,Operator,80,1,1,1
+W054,David Miller,Operator,76,1,1,0
+W055,Robert Taylor,Operator,70,1,1,0
+W056,Barbara Jones,Operator,81,0,1,1
+W057,Sarah Martin,Operator,79,0,1,0
+W058,John Hernandez,Operator,85,1,1,1
+W059,Patricia Lopez,Operator,95,0,1,0
+W060,Patricia Garcia,Operator,87,0,1,1
+W061,Michael Moore,Operator,76,0,0,0
+W062,Michael Miller,Operator,92,1,0,0
+W063,Richard Jones,Operator,73,1,0,1
+W064,Thomas Gonzalez,Operator,81,1,1,1
+W065,Thomas Williams,Operator,86,1,1,1
+W066,John Lopez,Operator,72,1,1,1
+W067,Mary Martin,Operator,62,1,0,0
+W068,Charles Davis,Operator,98,1,0,1
+W069,Joseph Martin,Operator,85,0,1,0
+W070,Elizabeth Moore,Operator,88,1,0,0
+W071,James Hernandez,Operator,88,1,0,1
+W072,Patricia Johnson,Operator,90,0,0,0
+W073,Elizabeth Brown,Operator,60,0,1,1
+W074,Patricia Wilson,Operator,76,0,0,1
+W075,Barbara Johnson,Operator,65,0,1,1
+W076,Elizabeth Anderson,Operator,92,1,0,1
+W077,Robert Rodriguez,Operator,96,1,0,1
+W078,John Anderson,Operator,64,1,0,1
+W079,William Gonzalez,Operator,63,0,1,1
+W080,Karen Johnson,Operator,98,0,1,1
+W081,Patricia Garcia,Operator,79,1,0,1
+W082,John Martin,Operator,70,0,1,1
+W083,James Moore,Operator,96,0,1,1
+W084,Sarah Garcia,Operator,84,0,0,0
+W085,Mary Williams,Operator,76,1,1,1
+W086,Susan Lopez,Operator,87,1,1,1
+W087,Sarah Anderson,Operator,67,1,0,0
+W088,Elizabeth Brown,Operator,99,0,1,1
+W089,Thomas Williams,Operator,90,1,1,0
+W090,Barbara Miller,Operator,88,0,1,1
+W091,William Martinez,Operator,76,1,1,1
+W092,Barbara Thomas,Operator,63,1,0,0
+W093,William Martin,Operator,90,0,1,1
+W094,Thomas Davis,Operator,81,0,1,0
+W095,Jessica Garcia,Operator,60,1,0,1
+W096,Linda Martinez,Operator,89,1,1,0
+W097,Joseph Thomas,Operator,81,0,1,0
+W098,Joseph Garcia,Operator,86,0,1,1
+W099,Karen Garcia,Operator,93,1,1,1
+W100,Joseph Thomas,Operator,91,1,1,1
+C001,Clerk Name 1,Clerk,88,0,0,0
+C002,Clerk Name 2,Clerk,82,0,0,0
+C003,Clerk Name 3,Clerk,92,0,0,0
+C004,Clerk Name 4,Clerk,87,0,0,0
+C005,Clerk Name 5,Clerk,92,0,0,0
+MV001,Mover Name 1,Mover,70,0,0,0
+MV002,Mover Name 2,Mover,63,0,0,0
+MV003,Mover Name 3,Mover,60,0,0,0
+MV004,Mover Name 4,Mover,84,0,0,0
+MV005,Mover Name 5,Mover,75,0,0,0
+S001,Supervisor Name 1,Supervisor,93,1,1,1
+S002,Supervisor Name 2,Supervisor,90,1,1,1
+S003,Supervisor Name 3,Supervisor,95,1,1,1
+S004,Supervisor Name 4,Supervisor,96,1,1,1
+S005,Supervisor Name 5,Supervisor,85,1,1,1

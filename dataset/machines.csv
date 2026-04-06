@@ -1,0 +1,31 @@
+machine_id,type,baseProductivity,initialWear
+M-421,Tanning,82.0,53.228955531120356
+M-522,Drying,91.0,53.027094936370865
+M-733,Finishing,76.0,52.92225012779243
+M-844,Packaging,94.0,52.92225012779243
+M-105,Tanning,85.0,52.65673632621771
+M-106,Tanning,79.0,52.50967555046088
+M-207,Drying,88.0,52.37467854022985
+M-208,Drying,92.0,52.070172190666256
+M-309,Finishing,74.0,51.74632182121283
+M-310,Finishing,78.0,51.49159648418429
+M-411,Packaging,90.0,51.03846080303199
+M-412,Packaging,96.0,95.0
+M-513,Tanning,81.0,95.0
+M-514,Tanning,83.0,95.0
+M-615,Drying,87.0,95.0
+M-616,Drying,89.0,95.0
+M-717,Finishing,75.0,95.0
+M-718,Finishing,77.0,95.0
+M-819,Packaging,93.0,95.0
+M-820,Packaging,0.0,95.0
+M-C1,Clerk Station,100.0,95.0
+M-C2,Clerk Station,100.0,95.0
+M-C3,Clerk Station,100.0,95.0
+M-M1,Mover Station,100.0,95.0
+M-M2,Mover Station,100.0,95.0
+M-M3,Mover Station,100.0,95.0
+M-M4,Mover Station,100.0,95.0
+M-M5,Mover Station,100.0,95.0
+M-S1,Supervisor Sector,100.0,95.0
+M-S2,Supervisor Sector,100.0,95.0
