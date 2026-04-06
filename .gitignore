@@ -1,4 +1,9 @@
-logs/
-static/
+__pycache__/
+*.pyc
 temp/
 temps/
+tmps/
+tmp/
+logs/
+static/
+.env
