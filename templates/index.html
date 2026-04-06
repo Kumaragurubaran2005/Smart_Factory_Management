@@ -22,7 +22,6 @@
             min-height: 100vh;
         }
 
-        /* Navbar */
         .navbar {
             display: flex;
             align-items: center;
@@ -40,7 +39,7 @@
             font-size: 1.1rem;
             font-weight: 800;
             background: linear-gradient(90deg, #3B9EFF, #AA44FF);
-            -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -76,6 +75,7 @@
             color: #FFB7C5;
             font-size: 0.85rem;
             text-decoration: none;
+            font-family: 'Inter', sans-serif;
         }
 
         .logout-btn:hover {
@@ -86,7 +86,6 @@
             box-shadow: 0 0 15px #FF3366;
         }
 
-        /* Stats row */
         .stats-row {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -101,6 +100,11 @@
             padding: 18px 20px;
             text-align: center;
             backdrop-filter: blur(8px);
+            transition: all 0.2s;
+        }
+
+        .stat:hover {
+            border-color: rgba(59, 158, 255, 0.4);
         }
 
         .stat-val {
@@ -118,7 +122,6 @@
             letter-spacing: 0.06em;
         }
 
-        /* Main grid */
         .dashboard-grid {
             display: grid;
             grid-template-columns: 1fr 380px;
@@ -233,20 +236,31 @@
             border-collapse: collapse;
         }
 
-        th,
-        td {
-            padding: 8px 6px;
-            text-align: left;
-            border-bottom: 1px solid rgba(0, 200, 255, 0.2);
-            font-size: 0.75rem;
-        }
-
         th {
+            font-size: 0.7rem;
+            font-weight: 700;
             color: #6A8FAD;
-            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 10px 6px;
+            text-align: left;
+            border-bottom: 1px solid rgba(59, 158, 255, 0.1);
         }
 
-        .voice-btn {
+        td {
+            font-size: 0.75rem;
+            color: #C0D8F0;
+            padding: 8px 6px;
+            border-bottom: 1px solid rgba(59, 158, 255, 0.06);
+            vertical-align: middle;
+        }
+
+        tr:hover td {
+            background: rgba(59, 158, 255, 0.05);
+        }
+
+        .voice-btn,
+        .btn-next {
             background: linear-gradient(95deg, #1F3147, #0F1A28);
             border: 1px solid #3B9EFF;
             padding: 10px 16px;
@@ -255,13 +269,27 @@
             cursor: pointer;
             font-weight: bold;
             color: #D0E8FF;
-            margin-top: 12px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
         }
 
-        .voice-btn:hover {
+        .voice-btn:hover,
+        .btn-next:hover {
             background: #2B9EFF;
             color: black;
             box-shadow: 0 0 12px #2B9EFF;
+            transform: translateY(-1px);
+        }
+
+        .btn-next {
+            width: auto;
+            background: linear-gradient(90deg, #FFAA33, #FF7700);
+            color: #000;
+        }
+
+        .btn-next:hover {
+            background: linear-gradient(90deg, #FFBB44, #FF8800);
+            box-shadow: 0 0 12px #FFAA33;
         }
 
         .toast-notify {
@@ -326,17 +354,6 @@
             text-align: center;
         }
 
-        .btn-next {
-            background: linear-gradient(90deg, #FFAA33, #FF7700);
-            border: none;
-            padding: 8px 18px;
-            border-radius: 32px;
-            font-weight: bold;
-            cursor: pointer;
-            color: #000;
-            font-family: 'Inter', sans-serif;
-        }
-
         @media (max-width: 1000px) {
             .dashboard-grid {
                 grid-template-columns: 1fr;
@@ -380,7 +397,6 @@
         <button id="logoutButton" class="logout-btn">🚪 Logout</button>
     </nav>
 
-    <!-- Stats row -->
     <div class="stats-row">
         <div class="stat">
             <div class="stat-val" id="machines">—</div>
@@ -404,7 +420,6 @@
         </div>
     </div>
 
-    <!-- Forecast card -->
     <div class="card" style="margin: 0 32px 20px 32px; border-color: rgba(255,180,50,0.5);">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
             <h3 style="color:#FFCC44;">🔮 Deep‑Q Scenario Engine</h3>
@@ -435,7 +450,6 @@
     </div>
 
     <div class="dashboard-grid">
-        <!-- LEFT COLUMN: 3D + Stock + Allocations -->
         <div>
             <div class="card" style="padding: 0; overflow: hidden;">
                 <div id="factory3d"></div>
@@ -476,8 +490,6 @@
                 <canvas id="healthChart" style="height:160px; margin-top:16px;"></canvas>
             </div>
         </div>
-
-        <!-- RIGHT COLUMN: Workers, Voice, Log -->
         <div>
             <div class="card">
                 <h3>🖱️ Smart Assignment (Drag & Drop)</h3>
@@ -504,14 +516,13 @@
     </div>
 
     <script type="importmap">
-    { "imports": { "three": "https://unpkg.com/three@0.128.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/" } }
-</script>
+        { "imports": { "three": "https://unpkg.com/three@0.128.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/" } }
+    </script>
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
-        // --- API layer (real endpoints, mock fallback if needed) ---
         let mockMode = false;
         const mockState = {
             machines: [
@@ -552,9 +563,9 @@
             }
         }
 
-        // DOM elements
         let machineGroups = new Map(), machinesData = [], allocationMap = new Map(), healthChart = null, currentForecast = null;
         let rawStock = 0, finishedGoods = 0, dispatched = 0, workersList = [];
+        let realPendingOrders = 0; // added for actual pending from CustomerOrders
 
         function addLogEntry(msg, type = 'info') {
             const logDiv = document.getElementById('logPanel');
@@ -565,6 +576,22 @@
             if (logDiv.children.length > 28) logDiv.removeChild(logDiv.lastChild);
         }
         function showToast(msg) { const t = document.createElement('div'); t.className = 'toast-notify'; t.innerHTML = `🔔 ${msg}`; document.body.appendChild(t); setTimeout(() => t.remove(), 3500); }
+
+        // New: fetch real pending orders from CustomerOrders
+        async function fetchRealPendingOrders() {
+            try {
+                const res = await fetch('/api/orders/list');
+                const orders = await res.json();
+                // Sum quantities of orders not shipped or cancelled
+                const pendingSum = orders.filter(o => !['shipped', 'cancelled'].includes(o.status))
+                    .reduce((sum, o) => sum + (o.quantity || 0), 0);
+                realPendingOrders = pendingSum;
+                return pendingSum;
+            } catch (e) {
+                console.warn("Could not fetch pending orders", e);
+                return 0;
+            }
+        }
 
         async function fetchForecast() {
             const data = await smartFetch('/api/forecast');
@@ -578,18 +605,22 @@
                 document.getElementById('fc_supply').innerText = Math.round(data.supply_limit);
                 document.getElementById('fc_cap').innerText = Math.round(data.process_capacity);
                 document.getElementById('fc_feasible').innerText = Math.round(data.feasible_output);
+                // Also fetch real pending orders
+                await fetchRealPendingOrders();
                 updateStockUI();
             }
         }
         function updateStockUI() {
             document.getElementById('rawStock').innerText = Math.round(rawStock);
             document.getElementById('finishedGoods').innerText = Math.round(finishedGoods);
-            const pending = Math.max(0, (currentForecast?.predicted_demand || 0) - dispatched);
-            document.getElementById('pendingOrders').innerText = Math.round(pending);
+            // Use real pending orders from CustomerOrders instead of forecast
+            document.getElementById('pendingOrders').innerText = Math.round(realPendingOrders);
             document.getElementById('dispatched').innerText = Math.round(dispatched);
             document.getElementById('rawStockFill').style.width = `${Math.min(100, (rawStock / (currentForecast?.supply_limit || 1)) * 100)}%`;
             document.getElementById('finishedFill').style.width = `${Math.min(100, (finishedGoods / (currentForecast?.predicted_demand || 1)) * 100)}%`;
-            const fillRate = (currentForecast?.predicted_demand && currentForecast.predicted_demand > 0) ? (dispatched / currentForecast.predicted_demand) * 100 : 0;
+            // Fill rate based on real total demand (pending + dispatched)
+            const totalDemand = realPendingOrders + dispatched;
+            const fillRate = totalDemand > 0 ? (dispatched / totalDemand) * 100 : 0;
             document.getElementById('fillRate').innerText = fillRate.toFixed(0) + '%';
         }
         async function fetchStats() {
@@ -615,7 +646,7 @@
                 data.forEach(row => {
                     allocationMap.set(row.machine_id, row.operator);
                     const tr = document.createElement('tr');
-                    tr.innerHTML = `<td>${row.machine_name || row.machine}</td><td>${row.operator}</td><td>${(row.match_percent * 100).toFixed(0)}%<\/td>`;
+                    tr.innerHTML = `<td>${row.machine_name || row.machine}</td><td>${row.operator}</td><td style="color:#22DD77;">${(row.match_percent * 100).toFixed(0)}%<\/td>`;
                     tbody.appendChild(tr);
                 });
                 for (let [mid, worker] of allocationMap.entries()) {
@@ -658,7 +689,7 @@
             btn.innerText = "🌀 Simulate Next Shift";
         }
 
-        // --- 3D Machine creation (simplified but realistic) ---
+        // 3D Machine creation (same as original)
         function buildTanningUnit() {
             const g = new THREE.Group();
             const base = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.4, 1.3), new THREE.MeshPhongMaterial({ color: 0x5A6E7A, shininess: 80 }));
@@ -701,8 +732,6 @@
             obj.group.children.forEach(c => { if (c.isMesh && c.material) c.material.color = color; });
             obj.productivity = productivity;
         }
-
-        // Worker animation (simplified)
         function buildAnimatedWorker(accentHex) {
             const g = new THREE.Group();
             const bodyMat = new THREE.MeshLambertMaterial({ color: 0x2255AA });
@@ -756,7 +785,6 @@
         const controls = new OrbitControls(camera, renderer3d.domElement);
         controls.enableDamping = true;
         controls.target.set(0, 0.8, 0);
-        // Lights
         const ambient = new THREE.AmbientLight(0x223344, 0.65);
         scene.add(ambient);
         const hemiLight = new THREE.HemisphereLight(0x4488aa, 0x224422, 0.5);
@@ -773,7 +801,6 @@
         const backLight = new THREE.PointLight(0xFF8844, 0.45);
         backLight.position.set(-2, 3, -5);
         scene.add(backLight);
-        // Floor
         const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 20), new THREE.MeshLambertMaterial({ color: 0x060D14 }));
         floor.rotation.x = -Math.PI / 2;
         floor.position.y = -0.26;
@@ -821,7 +848,6 @@
             labelRenderer.setSize(w, h);
         });
 
-        // Drag-drop on canvas
         renderer3d.domElement.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; renderer3d.domElement.style.outline = '2px solid #3B9EFF'; });
         renderer3d.domElement.addEventListener('dragleave', () => renderer3d.domElement.style.outline = '');
         renderer3d.domElement.addEventListener('drop', async (e) => {
@@ -852,7 +878,6 @@
             } else showToast("Drop onto a machine model");
         });
 
-        // Voice
         let recognition = null;
         document.getElementById('voiceBtn').addEventListener('click', () => {
             if (!('webkitSpeechRecognition' in window)) { alert("Speech unsupported"); return; }

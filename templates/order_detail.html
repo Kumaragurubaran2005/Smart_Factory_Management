@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Order Detail · Neural Factory</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
@@ -12,17 +12,17 @@
     * {
       box-sizing: border-box;
       margin: 0;
-      padding: 0
+      padding: 0;
     }
 
     body {
       font-family: 'Inter', sans-serif;
       min-height: 100vh;
-      background: linear-gradient(135deg, #020C18, #071428 60%, #0D1F3C);
-      color: #D0E8FF
+      background: linear-gradient(135deg, #020C18 0%, #071428 60%, #0D1F3C 100%);
+      color: #D0E8FF;
     }
 
-    /* Navbar */
+    /* Navbar (consistent with all other pages) */
     .navbar {
       display: flex;
       align-items: center;
@@ -40,7 +40,7 @@
       font-size: 1.1rem;
       font-weight: 800;
       background: linear-gradient(90deg, #3B9EFF, #AA44FF);
-      -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
@@ -76,6 +76,7 @@
       color: #FFB7C5;
       font-size: 0.85rem;
       text-decoration: none;
+      font-family: 'Inter', sans-serif;
     }
 
     .logout-btn:hover {
@@ -86,36 +87,45 @@
       box-shadow: 0 0 15px #FF3366;
     }
 
+    /* Breadcrumb */
     .crumb {
       padding: 20px 32px 0;
-      font-size: .8rem;
-      color: #5A7A9D
+      font-size: 0.8rem;
+      color: #5A7A9D;
     }
 
     .crumb a {
       color: #5A7A9D;
-      text-decoration: none
+      text-decoration: none;
     }
 
     .crumb a:hover {
-      color: #7BD4FF
+      color: #7BD4FF;
     }
 
+    /* Layout */
     .layout {
       display: grid;
       grid-template-columns: 1fr 360px;
       gap: 24px;
       padding: 20px 32px 60px;
-      max-width: 1300px
+      max-width: 1400px;
+      margin: 0 auto;
     }
 
+    /* Cards */
     .card {
-      background: rgba(10, 22, 44, .75);
-      border: 1px solid rgba(59, 158, 255, .12);
+      background: rgba(10, 22, 44, 0.75);
+      border: 1px solid rgba(59, 158, 255, 0.12);
       border-radius: 20px;
-      padding: 26px;
+      padding: 24px;
       backdrop-filter: blur(12px);
-      margin-bottom: 20px
+      margin-bottom: 20px;
+      transition: all 0.2s;
+    }
+
+    .card:hover {
+      border-color: rgba(59, 158, 255, 0.4);
     }
 
     .card h2 {
@@ -125,160 +135,161 @@
       margin-bottom: 18px;
       display: flex;
       align-items: center;
-      gap: 8px
+      gap: 8px;
     }
 
     .order-ref {
       font-size: 2rem;
       font-weight: 800;
       background: linear-gradient(90deg, #3B9EFF, #AA44FF);
-      -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 4px
+      margin-bottom: 4px;
     }
 
     .order-status {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      font-size: .85rem;
+      font-size: 0.85rem;
       font-weight: 700;
       padding: 6px 16px;
       border-radius: 20px;
-      margin-bottom: 16px
+      margin-bottom: 16px;
     }
 
+    /* Grid */
     .grid2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 14px
+      gap: 14px;
     }
 
     .info-item {
-      background: rgba(5, 15, 35, .7);
+      background: rgba(5, 15, 35, 0.7);
       border-radius: 12px;
-      padding: 14px 16px
+      padding: 12px 16px;
     }
 
     .info-label {
-      font-size: .7rem;
-      color: #4A6A8A;
+      font-size: 0.7rem;
+      color: #6A8FAD;
       text-transform: uppercase;
-      letter-spacing: .07em;
+      letter-spacing: 0.07em;
       font-weight: 600;
-      margin-bottom: 4px
+      margin-bottom: 4px;
     }
 
     .info-val {
-      font-size: .92rem;
+      font-size: 0.9rem;
       font-weight: 600;
-      color: #C0D8F0
+      color: #C0D8F0;
     }
 
     .info-val.green {
-      color: #22DD77
+      color: #22DD77;
     }
 
     .info-val.orange {
-      color: #FFAA44
+      color: #FFAA44;
     }
 
     .info-val.purple {
-      color: #CC77FF
+      color: #CC77FF;
     }
 
-    /* Pipeline progress */
+    /* Pipeline steps */
     .pipeline {
       display: flex;
       align-items: center;
       gap: 0;
-      margin: 8px 0 20px
+      margin: 8px 0 20px;
     }
 
     .pip-step {
       flex: 1;
       text-align: center;
-      position: relative
+      position: relative;
     }
 
     .pip-circle {
       width: 32px;
       height: 32px;
       border-radius: 50%;
-      border: 2px solid rgba(59, 158, 255, .2);
-      background: rgba(5, 15, 35, .8);
+      border: 2px solid rgba(59, 158, 255, 0.2);
+      background: rgba(5, 15, 35, 0.8);
       margin: 0 auto 6px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: .8rem;
-      transition: all .4s;
+      font-size: 0.8rem;
+      transition: all 0.4s;
       position: relative;
-      z-index: 2
+      z-index: 2;
     }
 
     .pip-circle.done {
       background: linear-gradient(135deg, #22DD77, #2AF590);
       border-color: #22DD77;
-      color: #033;
-      box-shadow: 0 0 12px rgba(34, 221, 119, .4)
+      color: #022;
+      box-shadow: 0 0 12px rgba(34, 221, 119, 0.4);
     }
 
     .pip-circle.active {
       background: linear-gradient(135deg, #3B9EFF, #8844FF);
       border-color: #3B9EFF;
       color: #fff;
-      box-shadow: 0 0 16px rgba(59, 158, 255, .5);
-      animation: pulse 2s infinite
+      box-shadow: 0 0 16px rgba(59, 158, 255, 0.5);
+      animation: pulse 2s infinite;
     }
 
     .pip-label {
-      font-size: .65rem;
-      color: #5A7A9D;
+      font-size: 0.65rem;
+      color: #6A8FAD;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: .05em
+      letter-spacing: 0.05em;
     }
 
     .pip-line {
       height: 2px;
-      background: rgba(59, 158, 255, .12);
+      background: rgba(59, 158, 255, 0.12);
       flex: 1;
       position: relative;
-      top: -22px
+      top: -22px;
     }
 
     .pip-line.done {
-      background: linear-gradient(90deg, #22DD77, #3B9EFF)
+      background: linear-gradient(90deg, #22DD77, #3B9EFF);
     }
 
     @keyframes pulse {
 
       0%,
       100% {
-        box-shadow: 0 0 16px rgba(59, 158, 255, .5)
+        box-shadow: 0 0 16px rgba(59, 158, 255, 0.5);
       }
 
       50% {
-        box-shadow: 0 0 28px rgba(59, 158, 255, .8)
+        box-shadow: 0 0 28px rgba(59, 158, 255, 0.8);
       }
     }
 
-    /* Workers */
+    /* Worker cards */
     .worker-card {
       display: flex;
       align-items: center;
       gap: 14px;
-      background: rgba(5, 15, 35, .7);
+      background: rgba(5, 15, 35, 0.7);
       border-radius: 14px;
-      padding: 14px;
+      padding: 12px;
       margin-bottom: 10px;
-      border: 1px solid rgba(59, 158, 255, .1);
-      transition: transform .2s
+      border: 1px solid rgba(59, 158, 255, 0.1);
+      transition: transform 0.2s;
     }
 
     .worker-card:hover {
-      transform: translateX(4px)
+      transform: translateX(4px);
     }
 
     .worker-avatar {
@@ -290,24 +301,24 @@
       align-items: center;
       justify-content: center;
       font-size: 1.1rem;
-      flex-shrink: 0
+      flex-shrink: 0;
     }
 
     .worker-name {
       font-weight: 700;
-      font-size: .88rem
+      font-size: 0.88rem;
     }
 
     .worker-meta {
-      font-size: .74rem;
-      color: #5A7A9D;
-      margin-top: 2px
+      font-size: 0.74rem;
+      color: #6A8FAD;
+      margin-top: 2px;
     }
 
-    /* Shipment timeline */
+    /* Timeline */
     .timeline {
       position: relative;
-      padding-left: 28px
+      padding-left: 28px;
     }
 
     .timeline::before {
@@ -317,12 +328,12 @@
       top: 0;
       bottom: 0;
       width: 2px;
-      background: rgba(59, 158, 255, .15)
+      background: rgba(59, 158, 255, 0.15);
     }
 
     .tl-item {
       position: relative;
-      padding: 12px 0
+      padding: 12px 0;
     }
 
     .tl-dot {
@@ -333,111 +344,162 @@
       border-radius: 50%;
       border: 2px solid #3B9EFF;
       background: #071428;
-      top: 14px
+      top: 14px;
     }
 
     .tl-dot.done {
       background: #22DD77;
       border-color: #22DD77;
-      box-shadow: 0 0 8px rgba(34, 221, 119, .4)
+      box-shadow: 0 0 8px rgba(34, 221, 119, 0.4);
     }
 
     .tl-title {
-      font-size: .85rem;
+      font-size: 0.85rem;
       font-weight: 600;
-      color: #C0D8F0
+      color: #C0D8F0;
     }
 
     .tl-sub {
-      font-size: .74rem;
-      color: #5A7A9D;
-      margin-top: 2px
+      font-size: 0.74rem;
+      color: #6A8FAD;
+      margin-top: 2px;
     }
 
-    /* Action buttons */
+    /* Buttons */
     .btn-row {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
-      margin-top: 6px
+      margin-top: 6px;
     }
 
     .btn {
-      padding: 10px 20px;
+      padding: 8px 20px;
       border: none;
-      border-radius: 12px;
-      font-size: .82rem;
+      border-radius: 44px;
+      font-size: 0.8rem;
       font-weight: 700;
       cursor: pointer;
       font-family: 'Inter', sans-serif;
-      transition: all .2s
+      transition: all 0.2s;
     }
 
     .btn-process {
-      background: linear-gradient(135deg, #3B9EFF, #8844FF);
-      color: #fff
+      background: linear-gradient(95deg, #1F3147, #0F1A28);
+      border: 1px solid #3B9EFF;
+      color: #7BD4FF;
     }
 
     .btn-ready {
-      background: linear-gradient(135deg, #44FFDD, #22DD77);
-      color: #022
+      background: linear-gradient(95deg, #1F3147, #0F1A28);
+      border: 1px solid #44FFDD;
+      color: #44FFDD;
     }
 
     .btn-ship {
-      background: linear-gradient(135deg, #22DD77, #00CC66);
-      color: #011
+      background: linear-gradient(95deg, #1F3147, #0F1A28);
+      border: 1px solid #22DD77;
+      color: #22DD77;
     }
 
     .btn-cancel {
-      background: rgba(255, 68, 85, .15);
-      border: 1px solid rgba(255, 68, 85, .3);
-      color: #FF6677
+      background: linear-gradient(95deg, #1F3147, #0F1A28);
+      border: 1px solid #FF6677;
+      color: #FF8899;
     }
 
     .btn:hover {
-      transform: translateY(-2px);
-      filter: brightness(1.1)
+      background: #2B9EFF;
+      color: black;
+      box-shadow: 0 0 12px #2B9EFF;
+      transform: translateY(-1px);
+      border-color: white;
     }
 
+    .btn-process:hover {
+      background: #3B9EFF;
+      color: black;
+    }
+
+    .btn-ready:hover {
+      background: #44FFDD;
+      color: black;
+    }
+
+    .btn-ship:hover {
+      background: #22DD77;
+      color: black;
+    }
+
+    .btn-cancel:hover {
+      background: #FF6677;
+      color: black;
+    }
+
+    /* Toast */
     .toast {
       position: fixed;
       top: 20px;
       right: 20px;
-      background: rgba(5, 15, 35, .95);
+      background: rgba(5, 15, 35, 0.95);
       border: 1px solid #22DD77;
       border-radius: 12px;
       padding: 12px 20px;
       color: #22DD77;
-      font-size: .85rem;
+      font-size: 0.85rem;
       font-weight: 600;
       z-index: 999;
       transform: translateX(120%);
-      transition: transform .3s
+      transition: transform 0.3s;
     }
 
     .toast.show {
-      transform: translateX(0)
+      transform: translateX(0);
+    }
+
+    /* Responsive */
+    @media (max-width: 800px) {
+      .layout {
+        grid-template-columns: 1fr;
+        padding: 20px;
+      }
+
+      .navbar {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .crumb {
+        padding: 16px 20px 0;
+      }
     }
   </style>
 </head>
 
 <body>
+
   <nav class="navbar">
-    <div class="nav-logo">⚡ Neural Factory</div>
+    <div class="nav-logo">⚡ Neural Dynamo | HyperFactory Twin</div>
     <div class="nav-links">
       <a href="/">Dashboard</a>
       <a href="/orders_portal">Orders</a>
       <a href="/place_order">Place Order</a>
       <a href="/warehouse_dashboard">Warehouse</a>
       <a href="/raw_material_portal">Raw Materials</a>
-      <a href="/logout">Logout</a>
+      <a href="/manual_override">Overrides</a>
     </div>
+    <button id="logoutButton" class="logout-btn">🚪 Logout</button>
   </nav>
 
   <div class="crumb"><a href="/orders_portal">← Back to Orders Portal</a></div>
 
   <div class="layout">
-    <!-- LEFT -->
+    <!-- LEFT COLUMN -->
     <div>
       <div class="card" id="headerCard">
         <div class="order-ref" id="orderRef">Loading…</div>
@@ -474,17 +536,17 @@
       <div class="card" id="shipCard">
         <h2>🚚 Shipment Timeline</h2>
         <div class="timeline" id="shipTimeline">
-          <div style="color:#3A5570;font-size:.85rem">No shipments yet</div>
+          <div style="color:#6A8FAD; font-size:0.85rem;">No shipments yet</div>
         </div>
       </div>
     </div>
 
-    <!-- RIGHT -->
+    <!-- RIGHT COLUMN -->
     <div>
       <div class="card">
         <h2>👷 Allocated Workers</h2>
         <div id="workersPanel">
-          <div style="color:#3A5570;font-size:.84rem;text-align:center;padding:20px">No workers allocated
+          <div style="color:#6A8FAD; font-size:0.85rem; text-align:center; padding:20px;">No workers allocated
             yet.<br />Click <strong>Process</strong> to allocate.</div>
         </div>
       </div>
@@ -497,17 +559,18 @@
   </div>
 
   <div class="toast" id="toast"></div>
+
   <script>
     const ORDER_ID = {{ order_id }};
 
     const STATUS_ORDER = ['pending', 'allocated', 'in_production', 'ready', 'shipped'];
     const STATUS_COLOR = {
-      pending: 'rgba(59,158,255,.15);border:1px solid #3B9EFF;color:#7BD4FF',
-      allocated: 'rgba(170,68,255,.15);border:1px solid #AA44FF;color:#CC77FF',
-      in_production: 'rgba(255,170,68,.15);border:1px solid #FFAA44;color:#FFAA44',
-      ready: 'rgba(68,255,221,.15);border:1px solid #44FFDD;color:#44FFDD',
-      shipped: 'rgba(34,221,119,.15);border:1px solid #22DD77;color:#22DD77',
-      cancelled: 'rgba(255,68,85,.15);border:1px solid #FF4455;color:#FF6677'
+      pending: 'background:rgba(59,158,255,.15); border:1px solid #3B9EFF; color:#7BD4FF',
+      allocated: 'background:rgba(170,68,255,.15); border:1px solid #AA44FF; color:#CC77FF',
+      in_production: 'background:rgba(255,170,68,.15); border:1px solid #FFAA44; color:#FFAA44',
+      ready: 'background:rgba(68,255,221,.15); border:1px solid #44FFDD; color:#44FFDD',
+      shipped: 'background:rgba(34,221,119,.15); border:1px solid #22DD77; color:#22DD77',
+      cancelled: 'background:rgba(255,68,85,.15); border:1px solid #FF4455; color:#FF6677'
     };
 
     function setPipeline(status) {
@@ -522,7 +585,7 @@
       }
     }
 
-    function setActionBtns(status, id) {
+    function setActionBtns(status) {
       let html = '';
       if (status === 'pending') html += `<button class="btn btn-process" onclick="act('process')">⚙️ Process Order</button>`;
       if (status === 'in_production') html += `<button class="btn btn-ready" onclick="act('ready')">✅ Mark Ready</button>`;
@@ -546,36 +609,40 @@
         ['Workers Allocated', o.workers_allocated || 0, ''],
         ['Created', new Date(o.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }), ''],
       ];
-      document.getElementById('orderInfo').innerHTML = fields.map(([k, v, c]) => `
-    <div class="info-item"><div class="info-label">${k}</div><div class="info-val ${c}">${v}</div></div>
-  `).join('');
+      document.getElementById('orderInfo').innerHTML = fields.map(([k, v, c]) => `<div class="info-item"><div class="info-label">${k}</div><div class="info-val ${c}">${v}</div></div>`).join('');
     }
 
     function renderWorkers(allocs) {
-      const p = document.getElementById('workersPanel');
-      if (!allocs.length) { p.innerHTML = '<div style="color:#3A5570;font-size:.84rem;text-align:center;padding:20px">No workers allocated yet.</div>'; return; }
-      p.innerHTML = allocs.map(a => `
-    <div class="worker-card">
-      <div class="worker-avatar">👷</div>
-      <div>
-        <div class="worker-name">${a.worker_name}</div>
-        <div class="worker-meta">ID: ${a.worker_id} · Machine: ${a.machine_type}</div>
-        <div class="worker-meta" style="margin-top:2px">Since: ${a.allocated_at ? new Date(a.allocated_at).toLocaleString() : '—'}</div>
-      </div>
-    </div>
-  `).join('');
+      const panel = document.getElementById('workersPanel');
+      if (!allocs.length) {
+        panel.innerHTML = '<div style="color:#6A8FAD; font-size:0.85rem; text-align:center; padding:20px;">No workers allocated yet.<br />Click <strong>Process</strong> to allocate.</div>';
+        return;
+      }
+      panel.innerHTML = allocs.map(a => `
+        <div class="worker-card">
+          <div class="worker-avatar">👷</div>
+          <div>
+            <div class="worker-name">${escapeHtml(a.worker_name)}</div>
+            <div class="worker-meta">ID: ${escapeHtml(a.worker_id)} · Machine: ${escapeHtml(a.machine_type)}</div>
+            <div class="worker-meta" style="margin-top:2px">Since: ${a.allocated_at ? new Date(a.allocated_at).toLocaleString() : '—'}</div>
+          </div>
+        </div>
+      `).join('');
     }
 
-    function renderShipments(ships, o) {
-      const p = document.getElementById('shipTimeline');
-      if (!ships.length) { p.innerHTML = '<div style="color:#3A5570;font-size:.85rem">No shipments yet.</div>'; return; }
-      p.innerHTML = ships.map(s => `
-    <div class="tl-item">
-      <div class="tl-dot ${s.status === 'delivered' ? 'done' : ''}"></div>
-      <div class="tl-title">Shipped to ${s.destination} – ${s.warehouse_zone}</div>
-      <div class="tl-sub">Qty: ${s.quantity.toLocaleString()} · Status: ${s.status} · ${s.shipped_at ? new Date(s.shipped_at).toLocaleString() : ''}</div>
-    </div>
-  `).join('');
+    function renderShipments(ships) {
+      const panel = document.getElementById('shipTimeline');
+      if (!ships.length) {
+        panel.innerHTML = '<div style="color:#6A8FAD; font-size:0.85rem;">No shipments yet.</div>';
+        return;
+      }
+      panel.innerHTML = ships.map(s => `
+        <div class="tl-item">
+          <div class="tl-dot ${s.status === 'delivered' ? 'done' : ''}"></div>
+          <div class="tl-title">Shipped to ${escapeHtml(s.destination)} – ${escapeHtml(s.warehouse_zone)}</div>
+          <div class="tl-sub">Qty: ${s.quantity.toLocaleString()} · Status: ${s.status} · ${s.shipped_at ? new Date(s.shipped_at).toLocaleString() : ''}</div>
+        </div>
+      `).join('');
     }
 
     function renderProdSummary(o) {
@@ -585,41 +652,78 @@
         ['Material Usage', (o.raw_material_needed || 0) + ' kg'],
         ['Workers Used', o.workers_allocated || 0],
       ];
-      document.getElementById('prodSummary').innerHTML = items.map(([k, v]) => `
-    <div class="info-item" style="margin-bottom:10px"><div class="info-label">${k}</div><div class="info-val green">${v}</div></div>
-  `).join('');
+      document.getElementById('prodSummary').innerHTML = items.map(([k, v]) => `<div class="info-item" style="margin-bottom:10px"><div class="info-label">${k}</div><div class="info-val green">${v}</div></div>`).join('');
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>]/g, function (m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+      });
     }
 
     async function load() {
-      const r = await fetch(`/api/orders/${ORDER_ID}`).catch(() => null);
-      if (!r || !r.ok) { document.getElementById('orderRef').textContent = 'Order not found'; return; }
-      const data = await r.json();
-      const o = data.order;
+      try {
+        const r = await fetch(`/api/orders/${ORDER_ID}`);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        const o = data.order;
 
-      document.getElementById('orderRef').textContent = o.order_ref || `Order #${ORDER_ID}`;
-      const sc = STATUS_COLOR[o.status] || STATUS_COLOR.pending;
-      document.getElementById('orderStatusBadge').innerHTML = `<span class="order-status" style="background:${sc.split(';')[0]};${sc.split(';')[1] || ''};${sc.split(';')[2] || ''}">${(o.status || '').replace('_', ' ').toUpperCase()}</span>`;
+        document.getElementById('orderRef').textContent = o.order_ref || `Order #${ORDER_ID}`;
+        const sc = STATUS_COLOR[o.status] || STATUS_COLOR.pending;
+        document.getElementById('orderStatusBadge').innerHTML = `<span class="order-status" style="${sc}">${(o.status || '').replace('_', ' ').toUpperCase()}</span>`;
 
-      setPipeline(o.status);
-      setActionBtns(o.status, ORDER_ID);
-      renderInfo({ ...o, workers_allocated: data.allocations?.length || 0 });
-      renderWorkers(data.allocations || []);
-      renderShipments(data.shipments || [], o);
-      renderProdSummary({ ...o, workers_allocated: data.allocations?.length || 0 });
+        setPipeline(o.status);
+        setActionBtns(o.status);
+        renderInfo({ ...o, workers_allocated: data.allocations?.length || 0 });
+        renderWorkers(data.allocations || []);
+        renderShipments(data.shipments || []);
+        renderProdSummary({ ...o, workers_allocated: data.allocations?.length || 0 });
+      } catch (err) {
+        console.error(err);
+        document.getElementById('orderRef').textContent = 'Order not found';
+        document.getElementById('orderStatusBadge').innerHTML = '<span class="order-status" style="background:rgba(255,68,85,.15); border:1px solid #FF4455; color:#FF6677">ERROR</span>';
+      }
     }
 
     async function act(action) {
       const url = `/api/orders/${ORDER_ID}/${action}`;
-      const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' } }).catch(() => null);
-      if (!r) { showToast('❌ Network error', '#FF4455'); return; }
-      const d = await r.json();
-      if (d.success || d.message) { showToast('✅ ' + (d.message || 'Done')); await load(); }
-      else showToast('❌ ' + (d.error || 'Failed'), '#FF4455');
+      try {
+        const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+        const d = await r.json();
+        if (d.success || d.message) {
+          showToast('✅ ' + (d.message || 'Done'));
+          await load();
+        } else {
+          showToast('❌ ' + (d.error || 'Failed'), '#FF6677');
+        }
+      } catch (err) {
+        showToast('❌ Network error', '#FF6677');
+      }
     }
 
-    function showToast(msg, color = '#22DD77') { const t = document.getElementById('toast'); t.textContent = msg; t.style.borderColor = color; t.style.color = color; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3500); }
+    function showToast(msg, color = '#22DD77') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.borderColor = color;
+      t.style.color = color;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3500);
+    }
 
-    load(); setInterval(load, 10000);
+    // Logout button
+    document.getElementById('logoutButton').addEventListener('click', async () => {
+      if (confirm('End session?')) {
+        await fetch('/api/logout', { method: 'POST' });
+        window.location.href = '/login';
+      }
+    });
+
+    load();
+    setInterval(load, 10000);
   </script>
 </body>
 

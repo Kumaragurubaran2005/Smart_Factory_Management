@@ -126,26 +126,50 @@ def place_order():
 def list_orders():
     try:
         conn = _db()
-        rows = conn.execute('''
-            SELECT co.*,
-                   COALESCE(cnt.n, 0) AS workers_allocated
-            FROM CustomerOrders co
-            LEFT JOIN (
-                SELECT order_id, COUNT(*) AS n
-                FROM OrderAllocations GROUP BY order_id
-            ) cnt ON co.id = cnt.order_id
-            ORDER BY
-                CASE co.priority
-                    WHEN 'Urgent' THEN 1 WHEN 'High' THEN 2
-                    WHEN 'Normal' THEN 3 ELSE 4 END,
-                co.created_at DESC
-        ''').fetchall()
+
+        orders_df = pd.read_sql(
+            "SELECT * FROM CustomerOrders ORDER BY created_at DESC",
+            conn
+        )
+
+        if orders_df.empty:
+            conn.close()
+            return jsonify([])
+
+        shipped_df = pd.read_sql("""
+            SELECT order_id, COALESCE(SUM(quantity), 0) AS shipped_quantity
+            FROM Shipments
+            GROUP BY order_id
+        """, conn)
+
+        orders_df = orders_df.merge(
+            shipped_df,
+            left_on='id',
+            right_on='order_id',
+            how='left'
+        )
+
+        orders_df['shipped_quantity'] = orders_df['shipped_quantity'].fillna(0).astype(int)
+
         conn.close()
-        return jsonify([dict(r) for r in rows])
+
+        import numpy as np
+
+        import math
+
+        records = orders_df.to_dict('records')
+
+        # CLEAN EVERY VALUE MANUALLY
+        for row in records:
+            for k, v in row.items():
+                if isinstance(v, float) and math.isnan(v):
+                    row[k] = None
+
+        return jsonify(records)
+
     except Exception as e:
         logger.error(f"list_orders: {e}")
         return jsonify([]), 500
-
 
 @orders_bp.route('/api/orders/<int:oid>')
 def get_order(oid):
@@ -241,7 +265,8 @@ def ship_order(oid):
         if not order:
             conn.close(); return jsonify({'error': 'Not found'}), 404
         order = dict(order)
-        now = _now(); c = conn.cursor()
+        now = _now()
+        c = conn.cursor()
         zone = f"Zone-{chr(65 + (oid % 4))}"
         c.execute('''
             INSERT INTO Shipments (order_id, warehouse_zone, quantity, status, shipped_at, destination)
@@ -284,6 +309,7 @@ def order_stats():
                         'total_orders': sum(by_status.values())})
     except Exception as e:
         return jsonify({}), 500
+
 
 
 # ── Warehouse APIs ────────────────────────────────────────────────────────────
@@ -422,56 +448,6 @@ def receive_raw(roid):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@orders_bp.route('/api/orders/<int:order_id>/ship', methods=['POST'])
-def ship_order(order_id):
-    conn = _db()
-
-    # mark shipped
-    conn.execute("UPDATE CustomerOrders SET status='Shipped' WHERE id=?", (order_id,))
-
-    # update warehouse
-    order = conn.execute(
-        "SELECT product_type, quantity FROM CustomerOrders WHERE id=?",
-        (order_id,)
-    ).fetchone()
-
-    conn.execute("""
-        INSERT INTO Warehouse(product_type, stock)
-        VALUES (?, ?)
-        ON CONFLICT(product_type)
-        DO UPDATE SET stock = stock + ?
-    """, (order['product_type'], order['quantity'], order['quantity']))
-
-    conn.commit()
-    conn.close()
-
-    return jsonify({"message": "Order shipped"})
-# ── Market Forecast API ───────────────────────────────────────────────────────
-@orders_bp.route('/api/market/forecast')
-def market_forecast():
-    try:
-        from market_forecast_model import forecast_30_days
-        return jsonify(forecast_30_days())
-    except Exception as e:
-        logger.error(f"market_forecast: {e}")
-        return jsonify({'error': str(e)}), 500
-@orders_bp.route('/api/orders/<int:order_id>/process', methods=['POST'])
-def process_order(order_id):
-    conn = _db()
-
-    # update status
-    conn.execute("UPDATE CustomerOrders SET status='Allocated' WHERE id=?", (order_id,))
-
-    # simulate allocation
-    conn.execute("""
-        INSERT INTO OrderAllocations (order_id, worker_id, machine_type, assigned_at)
-        VALUES (?, 'W001', 'tanning', datetime('now'))
-    """, (order_id,))
-
-    conn.commit()
-    conn.close()
-
-    return jsonify({"message": "Order processed"})
 
 # ── Feasibility Check (called by place_order form) ────────────────────────────
 @orders_bp.route('/api/orders/feasibility', methods=['POST'])
@@ -522,4 +498,15 @@ def check_feasibility():
         })
     except Exception as e:
         logger.error(f"feasibility: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ── Market Forecast API ───────────────────────────────────────────────────────
+@orders_bp.route('/api/market/forecast')
+def market_forecast():
+    try:
+        from market_forecast_model import forecast_30_days
+        return jsonify(forecast_30_days())
+    except Exception as e:
+        logger.error(f"market_forecast: {e}")
         return jsonify({'error': str(e)}), 500

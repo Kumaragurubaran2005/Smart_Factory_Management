@@ -194,10 +194,27 @@ class CapacityPredictor:
 class RewardSystem:
 
     def compute(self, produced, demand):
-        profit = produced * 5
-        penalty = max(0, demand-produced) * 2
-        return (profit - penalty)/100
+        # Normalize scale
+        produced = float(produced)
+        demand = float(demand)
 
+        # Efficiency (how close to demand)
+        efficiency = produced / (demand + 1e-6)
+
+        # Overproduction penalty
+        over_penalty = max(0, produced - demand)
+
+        # Underproduction penalty
+        under_penalty = max(0, demand - produced)
+
+        # Final reward (balanced)
+        reward = (
+            2.0 * efficiency
+            - 0.5 * (over_penalty / (demand + 1e-6))
+            - 1.0 * (under_penalty / (demand + 1e-6))
+        )
+
+        return float(np.clip(reward, -2, 2))
 
 # =============================
 # 4. MAIN SYSTEM

@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Place Order · Neural Factory</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
@@ -12,7 +12,7 @@
     * {
       box-sizing: border-box;
       margin: 0;
-      padding: 0
+      padding: 0;
     }
 
     body {
@@ -20,10 +20,10 @@
       min-height: 100vh;
       background: linear-gradient(135deg, #020C18 0%, #071428 60%, #0D1F3C 100%);
       color: #D0E8FF;
-      overflow-x: hidden
+      overflow-x: hidden;
     }
 
-    /* Navbar */
+    /* Navbar (consistent with all other pages) */
     .navbar {
       display: flex;
       align-items: center;
@@ -41,7 +41,7 @@
       font-size: 1.1rem;
       font-weight: 800;
       background: linear-gradient(90deg, #3B9EFF, #AA44FF);
-      -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
@@ -77,6 +77,7 @@
       color: #FFB7C5;
       font-size: 0.85rem;
       text-decoration: none;
+      font-family: 'Inter', sans-serif;
     }
 
     .logout-btn:hover {
@@ -87,40 +88,47 @@
       box-shadow: 0 0 15px #FF3366;
     }
 
+    /* Page hero */
     .page-hero {
       text-align: center;
-      padding: 56px 20px 24px
+      padding: 56px 20px 24px;
     }
 
     .page-hero h1 {
       font-size: 2.4rem;
       font-weight: 800;
       background: linear-gradient(135deg, #3B9EFF, #AA44FF 60%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .page-hero p {
       color: #6A8FAD;
       margin-top: 8px;
-      font-size: 1rem
+      font-size: 1rem;
     }
 
+    /* Layout */
     .order-layout {
       display: grid;
       grid-template-columns: 1fr 380px;
       gap: 28px;
       max-width: 1100px;
       margin: 0 auto;
-      padding: 0 24px 60px
+      padding: 0 24px 60px;
     }
 
     .card {
-      background: rgba(10, 22, 44, .75);
-      border: 1px solid rgba(59, 158, 255, .12);
+      background: rgba(10, 22, 44, 0.75);
+      border: 1px solid rgba(59, 158, 255, 0.12);
       border-radius: 20px;
       padding: 28px;
-      backdrop-filter: blur(12px)
+      backdrop-filter: blur(12px);
+      transition: all 0.2s;
+    }
+
+    .card:hover {
+      border-color: rgba(59, 158, 255, 0.4);
     }
 
     .card h2 {
@@ -130,69 +138,108 @@
       margin-bottom: 20px;
       display: flex;
       align-items: center;
-      gap: 8px
+      gap: 8px;
     }
 
+    /* Form */
     .form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px
+      gap: 16px;
     }
 
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 6px
+      gap: 6px;
     }
 
     .form-group.full {
-      grid-column: 1/-1
+      grid-column: 1/-1;
     }
 
     label {
-      font-size: .76rem;
+      font-size: 0.76rem;
       font-weight: 600;
       color: #6A8FAD;
-      letter-spacing: .06em;
-      text-transform: uppercase
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
 
     input,
     select,
     textarea {
-      background: rgba(5, 15, 35, .8);
-      border: 1px solid rgba(59, 158, 255, .2);
+      background: rgba(5, 15, 35, 0.8);
+      border: 1px solid rgba(59, 158, 255, 0.2);
       border-radius: 12px;
       color: #D0E8FF;
       font-family: 'Inter', sans-serif;
-      font-size: .9rem;
+      font-size: 0.9rem;
       padding: 11px 16px;
       outline: none;
-      transition: border-color .2s, box-shadow .2s;
-      width: 100%
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
     }
 
     input:focus,
     select:focus,
     textarea:focus {
       border-color: #3B9EFF;
-      box-shadow: 0 0 0 3px rgba(59, 158, 255, .12)
+      box-shadow: 0 0 0 3px rgba(59, 158, 255, 0.12);
     }
 
     textarea {
       resize: vertical;
-      min-height: 80px
+      min-height: 80px;
     }
 
     select option {
       background: #071428;
-      color: #D0E8FF
+      color: #D0E8FF;
     }
 
+    /* Product chips */
+    .prod-chips {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .chip {
+      padding: 12px 8px;
+      border: 2px solid rgba(59, 158, 255, 0.15);
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+      background: rgba(5, 15, 35, 0.8);
+      font-size: 0.78rem;
+      font-weight: 600;
+      user-select: none;
+    }
+
+    .chip:hover {
+      border-color: rgba(59, 158, 255, 0.4);
+      background: rgba(59, 158, 255, 0.07);
+    }
+
+    .chip.active {
+      border-color: #3B9EFF;
+      background: rgba(59, 158, 255, 0.15);
+      color: #7BD4FF;
+    }
+
+    .chip .icon {
+      font-size: 1.3rem;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* Priority buttons */
     .priority-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 10px
+      gap: 10px;
     }
 
     .prio-btn {
@@ -201,35 +248,36 @@
       align-items: center;
       gap: 4px;
       padding: 14px 10px;
-      border: 2px solid rgba(59, 158, 255, .15);
+      border: 2px solid rgba(59, 158, 255, 0.15);
       border-radius: 14px;
-      background: rgba(5, 15, 35, .8);
+      background: rgba(5, 15, 35, 0.8);
       cursor: pointer;
-      transition: all .2s;
-      user-select: none
+      transition: all 0.2s;
+      user-select: none;
     }
 
     .prio-btn:hover {
-      background: rgba(59, 158, 255, .08);
-      border-color: rgba(59, 158, 255, .35)
+      background: rgba(59, 158, 255, 0.08);
+      border-color: rgba(59, 158, 255, 0.35);
     }
 
     .prio-btn.active {
       border-color: var(--c);
       background: rgba(var(--cr), 0.12);
-      box-shadow: 0 0 18px rgba(var(--cr), 0.2)
+      box-shadow: 0 0 18px rgba(var(--cr), 0.2);
     }
 
     .prio-icon {
-      font-size: 1.5rem
+      font-size: 1.5rem;
     }
 
     .prio-label {
-      font-size: .72rem;
+      font-size: 0.72rem;
       font-weight: 700;
-      letter-spacing: .08em
+      letter-spacing: 0.08em;
     }
 
+    /* Buttons */
     .btn-submit {
       width: 100%;
       padding: 16px;
@@ -241,31 +289,32 @@
       cursor: pointer;
       background: linear-gradient(135deg, #3B9EFF, #8844FF);
       color: #fff;
-      transition: all .25s;
-      margin-top: 20px
+      transition: all 0.25s;
+      margin-top: 20px;
     }
 
     .btn-submit:hover {
       transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(59, 158, 255, .4)
+      box-shadow: 0 10px 30px rgba(59, 158, 255, 0.4);
     }
 
     .btn-submit:disabled {
-      opacity: .5;
+      opacity: 0.5;
       transform: none;
-      cursor: not-allowed
+      cursor: not-allowed;
     }
 
+    /* Feasibility panel */
     .feasibility-panel {
-      background: rgba(5, 15, 35, .9);
-      border: 1px solid rgba(59, 158, 255, .18);
+      background: rgba(5, 15, 35, 0.9);
+      border: 1px solid rgba(59, 158, 255, 0.18);
       border-radius: 14px;
       padding: 18px;
       margin-bottom: 18px;
       min-height: 180px;
       display: flex;
       flex-direction: column;
-      gap: 10px
+      gap: 10px;
     }
 
     .feas-row {
@@ -273,23 +322,23 @@
       justify-content: space-between;
       align-items: center;
       padding: 8px 0;
-      border-bottom: 1px solid rgba(59, 158, 255, .08)
+      border-bottom: 1px solid rgba(59, 158, 255, 0.08);
     }
 
     .feas-row:last-child {
-      border: none
+      border: none;
     }
 
     .feas-key {
-      font-size: .78rem;
+      font-size: 0.78rem;
       color: #6A8FAD;
-      font-weight: 500
+      font-weight: 500;
     }
 
     .feas-val {
-      font-size: .88rem;
+      font-size: 0.88rem;
       color: #D0E8FF;
-      font-weight: 600
+      font-weight: 600;
     }
 
     .badge {
@@ -297,136 +346,130 @@
       align-items: center;
       padding: 3px 10px;
       border-radius: 20px;
-      font-size: .72rem;
-      font-weight: 700
+      font-size: 0.72rem;
+      font-weight: 700;
     }
 
     .badge-ok {
-      background: rgba(34, 221, 119, .15);
-      border: 1px solid rgba(34, 221, 119, .3);
-      color: #22DD77
+      background: rgba(34, 221, 119, 0.15);
+      border: 1px solid rgba(34, 221, 119, 0.3);
+      color: #22DD77;
     }
 
     .badge-warn {
-      background: rgba(255, 170, 68, .15);
-      border: 1px solid rgba(255, 170, 68, .3);
-      color: #FFAA44
+      background: rgba(255, 170, 68, 0.15);
+      border: 1px solid rgba(255, 170, 68, 0.3);
+      color: #FFAA44;
     }
 
     .badge-err {
-      background: rgba(255, 68, 85, .15);
-      border: 1px solid rgba(255, 68, 85, .3);
-      color: #FF4455
+      background: rgba(255, 68, 85, 0.15);
+      border: 1px solid rgba(255, 68, 85, 0.3);
+      color: #FF4455;
     }
 
+    /* Result card */
     .result-card {
       display: none;
-      background: linear-gradient(135deg, rgba(34, 221, 119, .08), rgba(59, 158, 255, .08));
-      border: 1px solid rgba(34, 221, 119, .3);
+      background: linear-gradient(135deg, rgba(34, 221, 119, 0.08), rgba(59, 158, 255, 0.08));
+      border: 1px solid rgba(34, 221, 119, 0.3);
       border-radius: 16px;
       padding: 22px;
       text-align: center;
-      margin-top: 16px
+      margin-top: 16px;
     }
 
     .result-card.show {
       display: block;
-      animation: fadeUp .3s ease
+      animation: fadeUp 0.3s ease;
     }
 
     .result-ref {
       font-size: 1.8rem;
       font-weight: 800;
-      color: #22DD77
+      color: #22DD77;
     }
 
     .result-msg {
-      font-size: .85rem;
+      font-size: 0.85rem;
       color: #8AAED0;
-      margin-top: 6px
+      margin-top: 6px;
     }
 
     @keyframes fadeUp {
       from {
         opacity: 0;
-        transform: translateY(12px)
+        transform: translateY(12px);
       }
 
       to {
         opacity: 1;
-        transform: translateY(0)
+        transform: translateY(0);
       }
     }
 
+    /* Toast */
     .toast {
       position: fixed;
       top: 20px;
       right: 20px;
-      background: rgba(5, 15, 35, .95);
+      background: rgba(5, 15, 35, 0.95);
       border: 1px solid #22DD77;
       border-radius: 12px;
       padding: 12px 20px;
       color: #22DD77;
-      font-size: .85rem;
+      font-size: 0.85rem;
       font-weight: 600;
       z-index: 999;
       transform: translateX(120%);
-      transition: transform .3s
+      transition: transform 0.3s;
     }
 
     .toast.show {
-      transform: translateX(0)
+      transform: translateX(0);
     }
 
-    .prod-chips {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px
-    }
+    /* Responsive */
+    @media (max-width: 800px) {
+      .order-layout {
+        grid-template-columns: 1fr;
+        padding: 0 20px 40px;
+      }
 
-    .chip {
-      padding: 12px 8px;
-      border: 2px solid rgba(59, 158, 255, .15);
-      border-radius: 12px;
-      cursor: pointer;
-      text-align: center;
-      transition: all .2s;
-      background: rgba(5, 15, 35, .8);
-      font-size: .78rem;
-      font-weight: 600;
-      user-select: none
-    }
+      .navbar {
+        flex-direction: column;
+        gap: 10px;
+      }
 
-    .chip:hover {
-      border-color: rgba(59, 158, 255, .4);
-      background: rgba(59, 158, 255, .07)
-    }
+      .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
 
-    .chip.active {
-      border-color: #3B9EFF;
-      background: rgba(59, 158, 255, .15);
-      color: #7BD4FF
-    }
+      .prod-chips {
+        grid-template-columns: repeat(2, 1fr);
+      }
 
-    .chip .icon {
-      font-size: 1.3rem;
-      display: block;
-      margin-bottom: 4px
+      .priority-grid {
+        grid-template-columns: 1fr 1fr;
+      }
     }
   </style>
 </head>
 
 <body>
+
   <nav class="navbar">
-    <div class="nav-logo">⚡ Neural Factory</div>
+    <div class="nav-logo">⚡ Neural Dynamo | HyperFactory Twin</div>
     <div class="nav-links">
       <a href="/">Dashboard</a>
       <a href="/orders_portal">Orders</a>
       <a href="/place_order" class="active">Place Order</a>
       <a href="/warehouse_dashboard">Warehouse</a>
       <a href="/raw_material_portal">Raw Materials</a>
-      <a href="/logout">Logout</a>
+      <a href="/manual_override">Overrides</a>
     </div>
+    <button id="logoutButton" class="logout-btn">🚪 Logout</button>
   </nav>
 
   <div class="page-hero">
@@ -525,7 +568,7 @@
       <div class="card" style="margin-bottom:20px">
         <h2>🧠 AI Feasibility Check</h2>
         <div class="feasibility-panel" id="feasPanel">
-          <div style="text-align:center;color:#3A5570;padding:20px">
+          <div style="text-align:center;color:#6A8FAD;padding:20px">
             <div style="font-size:2rem">⏳</div>
             <div style="font-size:.8rem;margin-top:8px">Enter quantity to see prediction</div>
           </div>
@@ -583,16 +626,16 @@
         if (d.error) { document.getElementById('feasPanel').innerHTML = '<div style="color:#FF4455;text-align:center;padding:20px">⚠️ ' + d.error + '</div>'; return; }
         const feas = d.feasible;
         document.getElementById('feasPanel').innerHTML = `
-      <div class="feas-row"><span class="feas-key">Feasibility</span><span class="feas-val"><span class="badge ${feas ? 'badge-ok' : 'badge-warn'}">${feas ? '✓ Achievable' : '⚠ Tight Deadline'}</span></span></div>
-      <div class="feas-row"><span class="feas-key">Estimated Completion</span><span class="feas-val">${d.estimated_completion}</span></div>
-      <div class="feas-row"><span class="feas-key">Production Days</span><span class="feas-val">${d.estimated_days} days</span></div>
-      <div class="feas-row"><span class="feas-key">Estimated Cost</span><span class="feas-val" style="color:#22DD77">$${d.estimated_cost.toLocaleString()}</span></div>
-      <div class="feas-row"><span class="feas-key">Raw Material Needed</span><span class="feas-val">${d.raw_material_needed_kg} kg</span></div>
-      <div class="feas-row"><span class="feas-key">Raw Material Stock</span><span class="feas-val"><span class="badge ${d.raw_material_available ? 'badge-ok' : 'badge-err'}">${d.raw_material_available ? 'Sufficient' : 'Low'}</span></span></div>
-      <div class="feas-row"><span class="feas-key">Workers Needed</span><span class="feas-val">${d.workers_needed}</span></div>
-      <div class="feas-row"><span class="feas-key">Machines Needed</span><span class="feas-val">${d.machines_needed}</span></div>
-      ${d.deadline_warning ? `<div style="color:#FFAA44;font-size:.76rem;padding:8px;background:rgba(255,170,68,.08);border-radius:8px">${d.deadline_warning}</div>` : ''}
-    `;
+          <div class="feas-row"><span class="feas-key">Feasibility</span><span class="feas-val"><span class="badge ${feas ? 'badge-ok' : 'badge-warn'}">${feas ? '✓ Achievable' : '⚠ Tight Deadline'}</span></span></div>
+          <div class="feas-row"><span class="feas-key">Estimated Completion</span><span class="feas-val">${d.estimated_completion}</span></div>
+          <div class="feas-row"><span class="feas-key">Production Days</span><span class="feas-val">${d.estimated_days} days</span></div>
+          <div class="feas-row"><span class="feas-key">Estimated Cost</span><span class="feas-val" style="color:#22DD77">$${d.estimated_cost.toLocaleString()}</span></div>
+          <div class="feas-row"><span class="feas-key">Raw Material Needed</span><span class="feas-val">${d.raw_material_needed_kg} kg</span></div>
+          <div class="feas-row"><span class="feas-key">Raw Material Stock</span><span class="feas-val"><span class="badge ${d.raw_material_available ? 'badge-ok' : 'badge-err'}">${d.raw_material_available ? 'Sufficient' : 'Low'}</span></span></div>
+          <div class="feas-row"><span class="feas-key">Workers Needed</span><span class="feas-val">${d.workers_needed}</span></div>
+          <div class="feas-row"><span class="feas-key">Machines Needed</span><span class="feas-val">${d.machines_needed}</span></div>
+          ${d.deadline_warning ? `<div style="color:#FFAA44;font-size:.76rem;padding:8px;background:rgba(255,170,68,.08);border-radius:8px">${d.deadline_warning}</div>` : ''}
+        `;
       } catch (e) { document.getElementById('feasPanel').innerHTML = '<div style="color:#FF4455;text-align:center;padding:20px">⚠️ AI unavailable</div>'; }
     }
     async function submitOrder() {
@@ -625,6 +668,13 @@
       t.textContent = msg; t.style.borderColor = color; t.style.color = color;
       t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3500);
     }
+    // Logout button
+    document.getElementById('logoutButton').addEventListener('click', async () => {
+      if (confirm('End session?')) {
+        await fetch('/api/logout', { method: 'POST' });
+        window.location.href = '/login';
+      }
+    });
     // Set min date to today
     document.getElementById('deadline').min = new Date().toISOString().split('T')[0];
     checkFeasibility();
