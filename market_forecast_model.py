@@ -21,23 +21,6 @@ _cached_mean = None
 _cached_std = None
 
 
-def generate_synthetic_market_data(days=500):
-    np.random.seed(42)
-    dates = pd.date_range(start='2023-01-01', periods=days, freq='D')
-    records = []
-    for product in PRODUCT_TYPES:
-        base = np.random.uniform(80, 200)
-        trend = np.linspace(0, 0.3, days)
-        seasonality = 20 * np.sin(2 * np.pi * np.arange(days) / 30)
-        noise = np.random.normal(0, 10, days)
-        demand = base + trend * days + seasonality + noise
-        demand = np.maximum(10, demand).astype(int)
-        for i, d in enumerate(dates):
-            records.append({'date': d, 'product_type': product, 'demand': demand[i]})
-    df = pd.DataFrame(records)
-    os.makedirs(os.path.join(PROJECT_ROOT, 'dataset'), exist_ok=True)
-    df.to_csv(os.path.join(PROJECT_ROOT, 'dataset', 'leather_market_scenarios.csv'), index=False)
-    return df
 
 
 def train_lstm_model(force_retrain=False):
