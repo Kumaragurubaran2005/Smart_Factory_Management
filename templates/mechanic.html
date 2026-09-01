@@ -1,67 +1,320 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mechanic Portal</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Mechanic Portal · Neural Factory</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            margin: 0; padding: 0; font-family: 'Inter', sans-serif;
-            background: #0f172a; color: white;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #020C18 0%, #071428 60%, #0D1F3C 100%);
+            color: #D0E8FF;
+            min-height: 100vh;
         }
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            background: rgba(255, 255, 255, 0.05); padding: 20px 40px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+
+        /* Navbar (consistent with dashboard) */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 32px;
+            background: rgba(5, 16, 38, 0.85);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(59, 158, 255, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
-        .header h2 { margin: 0; font-weight: 800; color: #f8fafc; }
-        .header a { color: #f1f5f9; text-decoration: none; padding: 8px 16px; background: rgba(255,255,255,0.1); border-radius: 6px; font-size: 0.9rem;}
-        .header a:hover { background: rgba(255,255,255,0.2); }
-        
-        .container { padding: 40px; max-width: 900px; margin: 0 auto; }
-        h3 { font-size: 1.25rem; margin-bottom: 24px; color: #cbd5e1; }
-        
-        .machine-list { display: grid; gap: 16px; }
+
+        .nav-logo {
+            font-size: 1.1rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #3B9EFF, #AA44FF);
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 16px;
+        }
+
+        .nav-links a {
+            color: #8AAED0;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 6px 14px;
+            border-radius: 20px;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            background: rgba(59, 158, 255, 0.15);
+            color: #7BD4FF;
+        }
+
+        .logout-btn {
+            background: rgba(20, 35, 55, 0.9);
+            border: 1px solid rgba(255, 80, 100, 0.6);
+            padding: 6px 16px;
+            border-radius: 48px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #FFB7C5;
+            font-size: 0.85rem;
+            text-decoration: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .logout-btn:hover {
+            background: #FF3366;
+            color: white;
+            border-color: white;
+            transform: scale(0.97);
+            box-shadow: 0 0 15px #FF3366;
+        }
+
+        /* Main container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+
+        .page-header {
+            margin-bottom: 28px;
+        }
+
+        .page-header h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #3B9EFF, #AA44FF 60%);
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: #6A8FAD;
+            font-size: 0.9rem;
+        }
+
+        /* Machine cards grid */
+        .machine-list {
+            display: grid;
+            gap: 20px;
+        }
+
         .machine-card {
-            background: #1e293b; border: 1px solid #334155; border-radius: 12px;
-            padding: 24px; display: flex; justify-content: space-between; align-items: center;
+            background: rgba(10, 22, 44, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(59, 158, 255, 0.15);
+            border-radius: 20px;
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            transition: all 0.2s;
         }
+
         .machine-card.critical {
-            border-color: #ef4444; background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(255, 68, 85, 0.6);
+            background: rgba(255, 68, 85, 0.08);
         }
-        .info { flex-grow: 1; }
-        .id { font-size: 1.25rem; font-weight: 800; margin-bottom: 4px; }
-        .type { color: #94a3b8; font-size: 0.9rem; margin-bottom: 12px;}
-        .health { font-weight: 600; font-size: 1.5rem; }
-        .health.red { color: #ef4444; }
-        .health.green { color: #10b981; }
-        
-        .btn {
-            padding: 12px 24px; background: #3b82f6; border: none;
-            color: white; font-weight: 600; cursor: pointer; transition: 0.2s; border-radius: 8px;
+
+        .machine-card:hover {
+            border-color: rgba(59, 158, 255, 0.4);
+            transform: translateY(-2px);
         }
-        .btn:hover { background: #2563eb; }
-        .btn.repair { background: #ef4444; }
-        .btn.repair:hover { background: #dc2626; }
-        .status { padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; background: #10b981; margin-left: auto; margin-right: 20px;}
-        
+
+        .info {
+            flex: 2;
+        }
+
+        .machine-id {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #7BD4FF;
+            margin-bottom: 4px;
+        }
+
+        .machine-type {
+            font-size: 0.8rem;
+            color: #8AAED0;
+            margin-bottom: 12px;
+        }
+
+        .health {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .health.critical {
+            color: #FF6677;
+        }
+
+        .health.good {
+            color: #22DD77;
+        }
+
+        .wear {
+            font-size: 0.75rem;
+            color: #6A8FAD;
+            margin-top: 6px;
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(34, 221, 119, 0.15);
+            color: #22DD77;
+            border: 1px solid rgba(34, 221, 119, 0.3);
+            margin-right: 20px;
+        }
+
+        .critical-badge {
+            background: rgba(255, 68, 85, 0.15);
+            color: #FF6677;
+            border-color: rgba(255, 68, 85, 0.3);
+        }
+
+        .repair-btn {
+            background: linear-gradient(95deg, #1F3147, #0F1A28);
+            border: 1px solid #FF4455;
+            border-radius: 44px;
+            padding: 8px 24px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: #FF8899;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .repair-btn:hover {
+            background: #FF3366;
+            color: white;
+            border-color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 0 10px #FF3366;
+        }
+
+        .operational-btn {
+            background: rgba(34, 221, 119, 0.1);
+            border: 1px solid rgba(34, 221, 119, 0.3);
+            color: #22DD77;
+            padding: 8px 20px;
+            border-radius: 44px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: default;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(10, 22, 44, 0.5);
+            border-radius: 28px;
+            color: #6A8FAD;
+            font-size: 0.9rem;
+        }
+
+        /* Toast */
+        .toast-notify {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: #0F212FDD;
+            backdrop-filter: blur(16px);
+            padding: 10px 20px;
+            border-radius: 60px;
+            border-left: 6px solid #22DD77;
+            font-weight: 500;
+            z-index: 1500;
+            animation: fadeSlide 0.3s ease;
+        }
+
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateX(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @media (max-width: 700px) {
+            .navbar {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            .machine-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .status-badge,
+            .critical-badge {
+                margin-right: 0;
+                align-self: flex-start;
+            }
+        }
     </style>
 </head>
+
 <body>
-    <div class="header">
-        <h2>🛠️ Mechanic Portal</h2>
-        <span>Mechanic: <strong>{{ name }}</strong>  <a href="/logout" style="margin-left:15px;">Log Out</a></span>
-    </div>
+
+    <nav class="navbar">
+        <div class="nav-logo">⚡ Neural Dynamo | HyperFactory Twin</div>
+        <div class="nav-links">
+            <a href="/">Dashboard</a>
+            <a href="/orders_portal">Orders</a>
+            <a href="/place_order">Place Order</a>
+            <a href="/warehouse_dashboard">Warehouse</a>
+            <a href="/raw_material_portal">Raw Materials</a>
+            <a href="/manual_override">Overrides</a>
+        </div>
+        <button id="logoutButton" class="logout-btn">🚪 Logout</button>
+    </nav>
 
     <div class="container">
-        <h3>Active Maintenance Queue</h3>
-        <p style="color:#64748b; font-size:0.9rem; margin-top:-15px; margin-bottom:30px;">
-            Machines with >70% wear are automatically pulled from the production line and routed here for maintenance.
-        </p>
+        <div class="page-header">
+            <h1>🛠️ Maintenance Portal</h1>
+            <p>Welcome, <strong>{{ name }}</strong> — Machines with health below 30% are flagged for repair.</p>
+        </div>
+
         <div id="machineList" class="machine-list">
-            <!-- Populated dynamically -->
-            <div style="text-align:center; color:#94a3b8; padding: 40px;">Scanning for hardware issues...</div>
+            <div class="empty-state">⟳ Loading machine diagnostics...</div>
         </div>
     </div>
 
@@ -70,49 +323,56 @@
             try {
                 const res = await fetch('/api/stats');
                 const data = await res.json();
-                
-                const list = document.getElementById('machineList');
-                list.innerHTML = "";
-                
-                let criticalFound = false;
-                
-                // Sort machines so critical ones are on top
-                const sorted = data.machines.sort((a,b) => a.health - b.health);
-                
-                sorted.forEach(m => {
-                    const hp = Math.round(m.health * 100);
-                    const wear = Math.round(m.wear || 0);
-                    const isCritical = hp < 30; // Wear > 70%
-                    
-                    if (isCritical) criticalFound = true;
-                    
-                    const card = document.createElement('div');
-                    card.className = `machine-card ${isCritical ? 'critical' : ''}`;
-                    
-                    card.innerHTML = `
-                        <div class="info">
-                            <div class="id">${m.id}</div>
-                            <div class="type">${m.name} Stage</div>
-                            <div class="health ${isCritical ? 'red' : 'green'}">${hp}% Health</div>
-                            <div style="color:#64748b; font-size:0.8rem; margin-top:4px;">Recorded wear level: ${wear}%</div>
-                        </div>
-                        ${isCritical ? 
-                            `<span style="color:#ef4444; font-weight:600; font-size:0.9rem; margin-right:20px;">LOCKED (MAINTENANCE)</span>
-                             <button class="btn repair" onclick="deployFix('${m.id}')">Deploy Fix</button>` :
-                            `<div class="status">Operational</div>`
-                        }
-                    `;
-                    list.appendChild(card);
-                });
-                
-                if(sorted.length === 0) {
-                    list.innerHTML = `<div style="text-align:center; color:#94a3b8; padding: 40px;">No machines found in database.</div>`;
+                const machines = data.machines || [];
+                const listDiv = document.getElementById('machineList');
+
+                if (machines.length === 0) {
+                    listDiv.innerHTML = '<div class="empty-state">✨ No machines found in the factory floor.</div>';
+                    return;
                 }
 
-            } catch(e) { console.error("Error fetching machines", e); }
+                // Sort by health ascending (worst first)
+                const sorted = [...machines].sort((a, b) => a.health - b.health);
+                listDiv.innerHTML = '';
+
+                sorted.forEach(m => {
+                    const healthPercent = Math.round(m.health * 100);
+                    const isCritical = healthPercent < 30;
+                    const wear = Math.round(m.wear || 0);
+
+                    const card = document.createElement('div');
+                    card.className = `machine-card ${isCritical ? 'critical' : ''}`;
+
+                    card.innerHTML = `
+                        <div class="info">
+                            <div class="machine-id">${m.id}</div>
+                            <div class="machine-type">${m.name || m.type}</div>
+                            <div class="health ${isCritical ? 'critical' : 'good'}">${healthPercent}% Health</div>
+                            <div class="wear">Wear level: ${wear}%</div>
+                        </div>
+                        ${isCritical ?
+                            `<button class="repair-btn" data-machine-id="${m.id}">🔧 Deploy Fix</button>` :
+                            `<div class="operational-btn">✅ Operational</div>`
+                        }
+                    `;
+                    listDiv.appendChild(card);
+                });
+
+                // Attach repair event listeners
+                document.querySelectorAll('.repair-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const machineId = btn.getAttribute('data-machine-id');
+                        await repairMachine(machineId);
+                    });
+                });
+
+            } catch (err) {
+                console.error("Fetch error", err);
+                document.getElementById('machineList').innerHTML = '<div class="empty-state">⚠️ Failed to load machine data. Check network.</div>';
+            }
         }
 
-        async function deployFix(machineId) {
+        async function repairMachine(machineId) {
             try {
                 const res = await fetch('/api/repair', {
                     method: 'POST',
@@ -120,20 +380,38 @@
                     body: JSON.stringify({ machine_id: machineId })
                 });
                 const data = await res.json();
-                if(data.success) {
-                    alert('Repair successful. Machine reset to 100% health.');
-                    fetchMachines(); // Refresh UI
+                if (data.success) {
+                    showToast(`✅ Machine ${machineId} repaired successfully`, '#22DD77');
+                    fetchMachines(); // refresh list
                 } else {
-                    alert('Error: ' + data.message);
+                    showToast(`❌ Repair failed: ${data.message || 'Unknown error'}`, '#FF6677');
                 }
-            } catch(e) {
-                alert('Connection error');
+            } catch (err) {
+                showToast('❌ Network error – could not reach repair service', '#FF6677');
             }
         }
 
-        // Poll every 3 seconds for new broken machines
+        function showToast(msg, color = '#22DD77') {
+            const t = document.createElement('div');
+            t.className = 'toast-notify';
+            t.style.borderLeftColor = color;
+            t.innerHTML = `🔔 ${msg}`;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 3500);
+        }
+
+        // Logout button
+        document.getElementById('logoutButton').addEventListener('click', async () => {
+            if (confirm('End maintenance session?')) {
+                await fetch('/api/logout', { method: 'POST' });
+                window.location.href = '/login';
+            }
+        });
+
+        // Refresh every 3 seconds
         setInterval(fetchMachines, 3000);
         fetchMachines();
     </script>
 </body>
+
 </html>

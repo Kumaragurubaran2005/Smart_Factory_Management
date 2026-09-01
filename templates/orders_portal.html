@@ -23,7 +23,6 @@
       color: #D0E8FF
     }
 
-    /* Navbar */
     .navbar {
       display: flex;
       align-items: center;
@@ -41,7 +40,7 @@
       font-size: 1.1rem;
       font-weight: 800;
       background: linear-gradient(90deg, #3B9EFF, #AA44FF);
-      -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
@@ -62,31 +61,30 @@
 
     .nav-links a:hover,
     .nav-links a.active {
-      background: rgba(59, 158, 255, 0.15);
-      color: #7BD4FF;
+      background: rgba(59, 158, 255, .15);
+      color: #7BD4FF
     }
 
     .logout-btn {
-      background: rgba(20, 35, 55, 0.9);
-      border: 1px solid rgba(255, 80, 100, 0.6);
+      background: rgba(20, 35, 55, .9);
+      border: 1px solid rgba(255, 80, 100, .6);
       padding: 6px 16px;
       border-radius: 48px;
       font-weight: 600;
       cursor: pointer;
-      transition: 0.2s;
+      transition: .2s;
       color: #FFB7C5;
-      font-size: 0.85rem;
-      text-decoration: none;
+      font-size: .85rem;
+      font-family: 'Inter', sans-serif;
     }
 
     .logout-btn:hover {
       background: #FF3366;
       color: white;
       border-color: white;
-      transform: scale(0.97);
-      box-shadow: 0 0 15px #FF3366;
+      transform: scale(.97);
+      box-shadow: 0 0 15px #FF3366
     }
-
 
     .page-hero {
       display: flex;
@@ -99,7 +97,7 @@
       font-size: 2rem;
       font-weight: 800;
       background: linear-gradient(135deg, #3B9EFF, #AA44FF 60%);
-      -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent
     }
 
@@ -133,7 +131,7 @@
 
     .stats-row {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(6, 1fr);
       gap: 16px;
       padding: 0 32px 24px
     }
@@ -153,8 +151,8 @@
     }
 
     .stat-lab {
-      font-size: .72rem;
-      font-weight: 600;
+      font-size: .68rem;
+      font-weight: 700;
       color: #4A6A8A;
       margin-top: 4px;
       text-transform: uppercase;
@@ -233,12 +231,12 @@
     }
 
     th {
-      font-size: .7rem;
+      font-size: .68rem;
       font-weight: 700;
       color: #4A6A8A;
       text-transform: uppercase;
       letter-spacing: .08em;
-      padding: 10px 14px;
+      padding: 10px 12px;
       text-align: left;
       border-bottom: 1px solid rgba(59, 158, 255, .1)
     }
@@ -246,7 +244,7 @@
     td {
       font-size: .82rem;
       color: #C0D8F0;
-      padding: 12px 14px;
+      padding: 11px 12px;
       border-bottom: 1px solid rgba(59, 158, 255, .06);
       vertical-align: middle
     }
@@ -255,12 +253,13 @@
       background: rgba(59, 158, 255, .05)
     }
 
+    /* All status badges */
     .badge {
       display: inline-flex;
       align-items: center;
-      padding: 3px 10px;
+      padding: 3px 9px;
       border-radius: 20px;
-      font-size: .7rem;
+      font-size: .68rem;
       font-weight: 700;
       white-space: nowrap
     }
@@ -287,6 +286,12 @@
       background: rgba(68, 255, 221, .12);
       border: 1px solid rgba(68, 255, 221, .3);
       color: #44FFDD
+    }
+
+    .b-partial {
+      background: rgba(255, 204, 68, .15);
+      border: 1px solid rgba(255, 204, 68, .4);
+      color: #FFCC44
     }
 
     .b-shipped {
@@ -325,17 +330,32 @@
       color: #22DD77
     }
 
+    /* Shipment progress */
+    .qty-bar-bg {
+      height: 4px;
+      background: rgba(59, 158, 255, .12);
+      border-radius: 4px;
+      overflow: hidden;
+      min-width: 70px;
+      margin-top: 4px;
+    }
+
+    .qty-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+    }
+
     .action-row {
       display: flex;
-      gap: 6px;
+      gap: 5px;
       flex-wrap: wrap
     }
 
     .act-btn {
-      padding: 4px 11px;
+      padding: 4px 10px;
       border: none;
       border-radius: 8px;
-      font-size: .7rem;
+      font-size: .68rem;
       font-weight: 700;
       cursor: pointer;
       font-family: 'Inter', sans-serif;
@@ -369,7 +389,10 @@
     .act-view {
       background: rgba(170, 68, 255, .12);
       color: #CC77FF;
-      border: 1px solid rgba(170, 68, 255, .25)
+      border: 1px solid rgba(170, 68, 255, .25);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center
     }
 
     .act-btn:hover {
@@ -435,6 +458,46 @@
       color: #3B9EFF;
       font-size: .85rem
     }
+
+    @media (max-width:1100px) {
+      .content {
+        grid-template-columns: 1fr
+      }
+    }
+
+    @media (max-width:900px) {
+      .stats-row {
+        grid-template-columns: repeat(3, 1fr)
+      }
+    }
+
+    @media (max-width:700px) {
+      .navbar {
+        flex-direction: column;
+        gap: 10px
+      }
+
+      .nav-links {
+        flex-wrap: wrap;
+        justify-content: center
+      }
+
+      .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 0 16px 16px
+      }
+
+      .page-hero {
+        padding: 20px 16px;
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start
+      }
+
+      .content {
+        padding: 0 16px 40px
+      }
+    }
   </style>
 </head>
 
@@ -442,8 +505,8 @@
   <nav class="navbar">
     <div class="nav-logo">⚡ Neural Dynamo | HyperFactory Twin</div>
     <div class="nav-links">
-      <a href="/" class="active">Dashboard</a>
-      <a href="/orders_portal">Orders</a>
+      <a href="/">Dashboard</a>
+      <a href="/orders_portal" class="active">Orders</a>
       <a href="/place_order">Place Order</a>
       <a href="/warehouse_dashboard">Warehouse</a>
       <a href="/raw_material_portal">Raw Materials</a>
@@ -460,8 +523,8 @@
     <a class="btn-new" href="/place_order">＋ New Order</a>
   </div>
 
-  <!-- Stats row -->
-  <div class="stats-row" id="statsRow">
+  <!-- Stats row — 6 slots including Partial -->
+  <div class="stats-row">
     <div class="stat">
       <div class="stat-val" id="sTot">–</div>
       <div class="stat-lab">Total Orders</div>
@@ -473,6 +536,10 @@
     <div class="stat">
       <div class="stat-val" id="sProd" style="color:#FFAA44">–</div>
       <div class="stat-lab">In Production</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="sPartial" style="color:#FFCC44">–</div>
+      <div class="stat-lab">Partial</div>
     </div>
     <div class="stat">
       <div class="stat-val" id="sShip" style="color:#22DD77">–</div>
@@ -492,6 +559,7 @@
           <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
           <button class="filter-btn" onclick="setFilter('pending',this)">Pending</button>
           <button class="filter-btn" onclick="setFilter('in_production',this)">In Production</button>
+          <button class="filter-btn" onclick="setFilter('partial',this)">Partial</button>
           <button class="filter-btn" onclick="setFilter('ready',this)">Ready</button>
           <button class="filter-btn" onclick="setFilter('shipped',this)">Shipped</button>
           <input class="search-box" type="text" placeholder="🔍 Search…" id="searchBox" oninput="renderTable()" />
@@ -503,11 +571,11 @@
                 <th>Ref</th>
                 <th>Customer</th>
                 <th>Product</th>
-                <th>Qty</th>
+                <th>Qty Ordered</th>
+                <th>Shipped / Left</th>
                 <th>Priority</th>
                 <th>Status</th>
                 <th>Due</th>
-                <th>Est. Cost</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -542,47 +610,102 @@
   <div class="toast" id="toast"></div>
 
   <script>
+
     let allOrders = [], statusFilter = 'all', statusChart = null, productChart = null;
 
-    function pBadge(p) { const m = { 'Urgent': 'b-urgent', 'High': 'b-high', 'Normal': 'b-normal', 'Low': 'b-low' }; return `<span class="badge ${m[p] || 'b-normal'}">${p}</span>` }
-    function sBadge(s) { const m = { 'pending': 'b-pending', 'allocated': 'b-allocated', 'in_production': 'b-in_production', 'ready': 'b-ready', 'shipped': 'b-shipped', 'cancelled': 'b-cancelled' }; return `<span class="badge ${m[s] || 'b-pending'}">${s.replace('_', ' ')}</span>` }
+    const STATUS_CLS = {
+      pending: 'b-pending', allocated: 'b-allocated', in_production: 'b-in_production',
+      ready: 'b-ready', partial: 'b-partial', shipped: 'b-shipped', cancelled: 'b-cancelled'
+    };
+    const PRIO_CLS = { Urgent: 'b-urgent', High: 'b-high', Normal: 'b-normal', Low: 'b-low' };
+
+    function pBadge(p) { return `<span class="badge ${PRIO_CLS[p] || 'b-normal'}">${p || 'Normal'}</span>` }
+    function sBadge(s) {
+      const label = (s || '').replace('_', ' ');
+      return `<span class="badge ${STATUS_CLS[s] || 'b-pending'}">${label}</span>`;
+    }
+
+    function qtyCell(o) {
+      const ordered = parseInt(o.quantity || 0);
+      const shipped = parseInt(o.shipped_quantity || 0);
+      const remaining = Math.max(0, ordered - shipped);
+      const pct = ordered > 0 ? Math.round((shipped / ordered) * 100) : 0;
+      const color = o.status === 'shipped' ? '#22DD77'
+        : o.status === 'partial' ? '#FFCC44' : '#3B9EFF';
+      return `<div>
+        <div style="font-size:.78rem">
+          <span style="color:#22DD77">${shipped.toLocaleString()}</span>
+          <span style="color:#4A6A8A"> / </span>
+          <span style="color:${remaining > 0 ? '#FFCC44' : '#4A6A8A'}">${remaining.toLocaleString()} left</span>
+        </div>
+        <div class="qty-bar-bg"><div class="qty-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        <div style="font-size:.65rem;color:#4A6A8A">${pct}%</div>
+      </div>`;
+    }
 
     function actions(o) {
       const id = o.id; let btns = '';
       if (o.status === 'pending') btns += `<button class="act-btn act-process" onclick="act(${id},'process')">⚙️ Process</button>`;
-      if (o.status === 'in_production') btns += `<button class="act-btn act-ready" onclick="act(${id},'ready')">✅ Mark Ready</button>`;
+      if (o.status === 'in_production') btns += `<button class="act-btn act-ready" onclick="act(${id},'ready')">✅ Ready</button>`;
       if (o.status === 'ready') btns += `<button class="act-btn act-ship" onclick="act(${id},'ship')">🚚 Ship</button>`;
-      if (!['shipped', 'cancelled'].includes(o.status)) btns += `<button class="act-btn act-cancel" onclick="act(${id},'cancel')">✕ Cancel</button>`;
+      if (!['shipped', 'cancelled'].includes(o.status))
+        btns += `<button class="act-btn act-cancel" onclick="act(${id},'cancel')">✕</button>`;
       btns += `<a href="/order_detail/${id}" class="act-btn act-view">🔍 View</a>`;
       return `<div class="action-row">${btns}</div>`;
     }
 
-    function setFilter(f, el) { statusFilter = f; document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); renderTable(); }
+    function setFilter(f, el) {
+      statusFilter = f;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      renderTable();
+    }
+
+    function isOverdue(o) {
+      if (!o.deadline || ['shipped', 'cancelled'].includes(o.status)) return false;
+      return new Date(o.deadline) < new Date();
+    }
 
     function renderTable() {
-      const q = document.getElementById('searchBox').value.toLowerCase();
+      const q = (document.getElementById('searchBox').value || '').toLowerCase();
       let filtered = allOrders.filter(o => statusFilter === 'all' || o.status === statusFilter);
-      if (q) filtered = filtered.filter(o => (o.order_ref || '').toLowerCase().includes(q) || (o.customer_name || '').toLowerCase().includes(q) || (o.product_type || '').toLowerCase().includes(q));
+      console.log(filtered);
+      console.log(allOrders);
+      if (q) filtered = filtered.filter(o =>
+        (o.order_ref || '').toLowerCase().includes(q) ||
+        (o.customer_name || '').toLowerCase().includes(q) ||
+        (o.product_type || '').toLowerCase().includes(q)
+      );
       const tbody = document.getElementById('ordersBody');
       if (!filtered.length) { tbody.innerHTML = `<tr><td colspan="9" class="empty">📭 No orders found</td></tr>`; return; }
       tbody.innerHTML = filtered.map(o => `<tr>
-    <td><a href="/order_detail/${o.id}" style="color:#7BD4FF;text-decoration:none;font-weight:600">${o.order_ref || '—'}</a></td>
-    <td><div style="font-weight:600">${o.customer_name}</div><div style="font-size:.7rem;color:#5A7A9D">${o.customer_email || ''}</div></td>
-    <td>${o.product_type}</td>
-    <td><strong>${o.quantity.toLocaleString()}</strong> <span style="color:#5A7A9D;font-size:.75rem">${o.unit || 'pcs'}</span></td>
-    <td>${pBadge(o.priority)}</td>
-    <td>${sBadge(o.status)}</td>
-    <td style="font-size:.78rem;color:${isOverdue(o) ? '#FF6677' : '#8AAED0'}">${o.deadline || o.estimated_completion || '—'}</td>
-    <td style="color:#22DD77;font-weight:600">$${(o.estimated_cost || 0).toLocaleString()}</td>
-    <td>${actions(o)}</td>
-  </tr>`).join('');
+        <td><a href="/order_detail/${o.id}" style="color:#7BD4FF;text-decoration:none;font-weight:600">${o.order_ref || '—'}</a></td>
+        <td>
+          <div style="font-weight:600">${o.customer_name || '—'}</div>
+          <div style="font-size:.7rem;color:#5A7A9D">${o.customer_email || ''}</div>
+        </td>
+        <td>${o.product_type || '—'}</td>
+        <td><strong>${parseInt(o.quantity || 0).toLocaleString()}</strong> <span style="color:#5A7A9D;font-size:.75rem">${o.unit || 'pcs'}</span></td>
+        <td>${qtyCell(o)}</td>
+        <td>${pBadge(o.priority)}</td>
+        <td>${sBadge(o.status)}</td>
+        <td style="font-size:.78rem;color:${isOverdue(o) ? '#FF6677' : '#8AAED0'}">
+          ${o.deadline || o.estimated_completion || '—'}
+          ${isOverdue(o) ? '<br><span style="font-size:.65rem;color:#FF6677">⚠ Overdue</span>' : ''}
+        </td>
+        <td>${actions(o)}</td>
+      </tr>`).join('');
     }
-    function isOverdue(o) { if (!o.deadline || ['shipped', 'cancelled'].includes(o.status)) return false; return new Date(o.deadline) < new Date(); }
 
     async function act(id, action) {
-      const url = action === 'process' ? `/api/orders/${id}/process` : action === 'ready' ? `/api/orders/${id}/ready` : action === 'ship' ? `/api/orders/${id}/ship` : `/api/orders/${id}/cancel`;
+      const endpoints = {
+        process: `/api/orders/${id}/process`,
+        ready: `/api/orders/${id}/ready`,
+        ship: `/api/orders/${id}/ship`,
+        cancel: `/api/orders/${id}/cancel`
+      };
       try {
-        const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+        const r = await fetch(endpoints[action], { method: 'POST', headers: { 'Content-Type': 'application/json' } });
         const d = await r.json();
         if (d.success || d.message) { showToast('✅ ' + (d.message || 'Done')); await load(); }
         else showToast('❌ ' + (d.error || 'Failed'), '#FF4455');
@@ -591,37 +714,63 @@
 
     function updateStats(stats) {
       document.getElementById('sTot').textContent = (stats.total_orders || 0).toLocaleString();
-      document.getElementById('sPend').textContent = (stats.by_status?.pending || 0).toLocaleString();
-      document.getElementById('sProd').textContent = (stats.by_status?.in_production || 0).toLocaleString();
+      // Pending includes allocated
+      const pendingCount = (stats.by_status?.pending || 0) + (stats.by_status?.allocated || 0);
+      document.getElementById('sPend').textContent = pendingCount.toLocaleString();
+      const prodCount = (stats.by_status?.in_production || 0) + (stats.by_status?.ready || 0);
+      document.getElementById('sProd').textContent = prodCount.toLocaleString();
+      document.getElementById('sPartial').textContent = (stats.by_status?.partial || 0).toLocaleString();
       document.getElementById('sShip').textContent = (stats.by_status?.shipped || 0).toLocaleString();
       document.getElementById('sRev').textContent = '$' + (stats.total_revenue || 0).toLocaleString();
       document.getElementById('revBig').textContent = '$' + (stats.total_revenue || 0).toLocaleString();
 
-      // Status doughnut
-      const statusColors = ['#7BD4FF', '#CC77FF', '#FFAA44', '#44FFDD', '#22DD77', '#FF6677'];
+      // Charts
+      const statusColors = { pending: '#7BD4FF', allocated: '#CC77FF', in_production: '#FFAA44', ready: '#44FFDD', partial: '#FFCC44', shipped: '#22DD77', cancelled: '#FF6677' };
       const sLabels = Object.keys(stats.by_status || {});
       const sVals = Object.values(stats.by_status || {});
+      const sBgColors = sLabels.map(l => statusColors[l] || '#7BD4FF');
       if (statusChart) statusChart.destroy();
-      statusChart = new Chart(document.getElementById('statusChart'), { type: 'doughnut', data: { labels: sLabels, datasets: [{ data: sVals, backgroundColor: statusColors.slice(0, sLabels.length), borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#8AAED0', font: { size: 11 } } } } } });
-
-      // Product bar
+      statusChart = new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: { labels: sLabels, datasets: [{ data: sVals, backgroundColor: sBgColors, borderWidth: 0 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#8AAED0', font: { size: 11 } } } } }
+      });
       const pLabels = Object.keys(stats.by_product || {});
       const pVals = Object.values(stats.by_product || {});
       if (productChart) productChart.destroy();
-      productChart = new Chart(document.getElementById('productChart'), { type: 'bar', data: { labels: pLabels, datasets: [{ data: pVals, backgroundColor: 'rgba(59,158,255,.55)', borderColor: '#3B9EFF', borderWidth: 1, borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#6A8FAD', font: { size: 9 } }, grid: { display: false } }, y: { ticks: { color: '#6A8FAD', font: { size: 9 } }, grid: { color: 'rgba(59,158,255,.07)' } } } } });
+      productChart = new Chart(document.getElementById('productChart'), {
+        type: 'bar',
+        data: { labels: pLabels, datasets: [{ data: pVals, backgroundColor: 'rgba(59,158,255,.55)', borderColor: '#3B9EFF', borderWidth: 1, borderRadius: 6 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#6A8FAD', font: { size: 9 } }, grid: { display: false } }, y: { ticks: { color: '#6A8FAD', font: { size: 9 } }, grid: { color: 'rgba(59,158,255,.07)' } } } }
+      });
     }
 
     async function load() {
+      fetch('/api/orders/list')
+        .then(r => r.text())
+        .then(t => console.log("RAW RESPONSE:", t));
       const [orders, stats] = await Promise.all([
         fetch('/api/orders/list').then(r => r.json()).catch(() => []),
         fetch('/api/orders/stats').then(r => r.json()).catch(() => ({ by_status: {}, by_product: {}, total_revenue: 0, total_orders: 0 }))
       ]);
-      allOrders = orders;
+      console.log(orders);
+      allOrders = Array.isArray(orders) ? orders : [];
       renderTable();
       updateStats(stats);
     }
 
-    function showToast(msg, color = '#22DD77') { const t = document.getElementById('toast'); t.textContent = msg; t.style.borderColor = color; t.style.color = color; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3500); }
+    function showToast(msg, color = '#22DD77') {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.style.borderColor = color; t.style.color = color;
+      t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    document.getElementById('logoutButton').addEventListener('click', async () => {
+      if (confirm('End session?')) {
+        await fetch('/logout');
+        window.location.href = '/login';
+      }
+    });
 
     load(); setInterval(load, 8000);
   </script>

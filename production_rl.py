@@ -32,9 +32,9 @@ class DQNAgent:
         gamma: float = 0.95,
         epsilon_start: float = 1.0,
         epsilon_min: float = 0.01,
-        epsilon_decay: float = 0.999,   # 🔥 FIXED
-        memory_size: int = 10000,
-        batch_size: int = 128,
+        epsilon_decay = 0.9995,   # slower decay  # 🔥 FIXED
+        memory_size: int = 20000,
+        batch_size: int = 256,
         target_sync_freq: int = 100,
     ):
 
@@ -71,12 +71,12 @@ class DQNAgent:
         ])
 
         model.compile(
-            optimizer=Adam(learning_rate=lr, clipnorm=1.0),  # 🔥 stable
+            optimizer=Adam(learning_rate=lr, clipnorm=1.0),
             loss=tf.keras.losses.Huber()
         )
         return model
 
-    # =============================
+    # ===================   ==========
     # TARGET NETWORK
     # =============================
     def update_target(self):
@@ -129,7 +129,7 @@ class DQNAgent:
         dones = np.array([b[4] for b in batch], dtype=np.float32)
 
         # 🔥 normalize rewards
-        rewards = np.clip(rewards / 100.0, -5, 5)
+        rewards = np.tanh(rewards)
 
         target_q = self.model.predict(states, verbose=0)
 

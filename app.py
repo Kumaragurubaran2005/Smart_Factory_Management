@@ -11,6 +11,8 @@ import sqlite3
 import tensorflow as tf
 from flask import Flask, render_template, jsonify, Response, request, session, redirect, url_for
 from flask_sock import Sock
+from datetime import datetime
+
 from production_rl import DQNAgent as ProductionAgent
 from logistics_rl import TruckAgent as LogisticsAgent, TruckEnv
 from raw_material_model import calculate_material_needs, get_7_30_90_predictions
@@ -43,14 +45,12 @@ def websocket_endpoint(ws):
 # -----------------------------
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(PROJECT_ROOT)
-
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 # -----------------------------
 # CONFIGURATION
 # -----------------------------
 class Config:
-    """Application configuration."""
     DB_NAME = os.environ.get('DB_NAME', 'factory.db')
     PROD_MODEL_PATH = os.environ.get('PROD_MODEL_PATH', os.path.join(PROJECT_ROOT, "logs", "prod_best.keras"))
     LOGISTICS_MODEL_PATH = os.environ.get('LOGISTICS_MODEL_PATH', os.path.join(PROJECT_ROOT, "logs", "logistics_best.keras"))
@@ -64,10 +64,7 @@ class Config:
 # -----------------------------
 # LOGGING
 # -----------------------------
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # -----------------------------
@@ -75,10 +72,9 @@ logger = logging.getLogger(__name__)
 # -----------------------------
 last_pulse = time.time()
 last_pulse_lock = threading.Lock()
-MANUAL_OVERRIDES = {}          # machine_type -> worker_id
+MANUAL_OVERRIDES = {}
 overrides_lock = threading.Lock()
-physics_lock = threading.Lock()  # for CSV I/O
-
+physics_lock = threading.Lock()
 GLOBAL_RAW_STOCK = 5000
 GLOBAL_FINISHED_GOODS = 0
 GLOBAL_DISPATCHED = 0
@@ -88,22 +84,17 @@ stock_lock = threading.Lock()
 # APP INITIALIZATION
 # -----------------------------
 app.config.from_object(Config)
-
-# Initialize database
 try:
     from database import DB_NAME, init_db
     init_db()
     logger.info("Database initialized")
-except ImportError as e:
-    logger.error(f"Database module import error: {e}")
 except Exception as e:
-    logger.error(f"Database initialization failed: {e}")
+    logger.error(f"Database init error: {e}")
 
 # -----------------------------
 # HELPER FUNCTIONS
 # -----------------------------
 def safe_read_csv(filepath, **kwargs):
-    """Read CSV safely, returning empty DataFrame on error."""
     try:
         return pd.read_csv(filepath, **kwargs)
     except Exception as e:
@@ -111,7 +102,6 @@ def safe_read_csv(filepath, **kwargs):
         return pd.DataFrame()
 
 def safe_write_csv(df, filepath, **kwargs):
-    """Write CSV safely, logging errors."""
     try:
         df.to_csv(filepath, **kwargs)
         return True
@@ -120,7 +110,6 @@ def safe_write_csv(df, filepath, **kwargs):
         return False
 
 def seed_attendance_if_empty():
-    """If no attendance for today, insert records for all workers from employees.csv."""
     try:
         conn = sqlite3.connect(Config.DB_NAME)
         cursor = conn.cursor()
@@ -138,46 +127,260 @@ def seed_attendance_if_empty():
                 logger.info(f"Seeded attendance for {len(staff_df)} workers for today.")
             else:
                 logger.warning("No employees.csv found; cannot seed attendance.")
-                # Create a default employees.csv if it doesn't exist
                 default_employees = pd.DataFrame({
                     'worker_id': ['W001', 'W002', 'W003', 'W004'],
                     'name': ['John Doe', 'Jane Smith', 'Bob Johnson', 'Alice Lee'],
                     'overall_skill': [85, 92, 78, 88]
                 })
                 default_employees.to_csv(Config.STAFF_PATH, index=False)
-                logger.info(f"Created default employees.csv at {Config.STAFF_PATH}")
-                # Retry seeding
-                staff_df = safe_read_csv(Config.STAFF_PATH)
-                if not staff_df.empty:
-                    now = pd.Timestamp.now().isoformat()
-                    for _, row in staff_df.iterrows():
-                        worker_id = row['worker_id']
-                        cursor.execute("INSERT INTO Attendance (worker_id, timestamp) VALUES (?, ?)", (worker_id, now))
-                    conn.commit()
-                    logger.info(f"Seeded attendance for {len(staff_df)} workers from default CSV.")
+                staff_df = default_employees
+                now = pd.Timestamp.now().isoformat()
+                for _, row in staff_df.iterrows():
+                    worker_id = row['worker_id']
+                    cursor.execute("INSERT INTO Attendance (worker_id, timestamp) VALUES (?, ?)", (worker_id, now))
+                conn.commit()
+                logger.info("Seeded attendance from default CSV.")
         conn.close()
     except Exception as e:
         logger.error(f"Error seeding attendance: {e}")
+# ============================================================
+# PASTE THIS FILE'S SECTIONS INTO THE CORRECT PLACES IN app.py
+# ============================================================
+
+# -------------------------------------------------------
+# SECTION 1: Replace autonomous_factory_loop() entirely
+# -------------------------------------------------------
+
+def autonomous_factory_loop():
+    global GLOBAL_RAW_STOCK, GLOBAL_FINISHED_GOODS, GLOBAL_DISPATCHED, current_forecast
+
+    from database import get_all_customer_orders, update_order_status, add_shipment, update_warehouse_stock
+
+    logger.info("Autonomous Factory System initiated. Waiting 5s before first cycle...")
+    time.sleep(5)
+
+    while True:
+        try:
+            time.sleep(5)
+
+            # ---- 1. Get pending customer orders (INCLUDING partial) ----
+            try:
+                df_orders = get_all_customer_orders()
+                if df_orders is not None and not df_orders.empty:
+                    # KEY FIX: 'partial' is now included so partially filled orders
+                    # keep getting processed every cycle.
+                    pending = df_orders[df_orders['status'].isin(
+                        ['pending', 'allocated', 'in_production', 'partial']
+                    )]
+                    total_pending_qty = pending['quantity'].sum() if not pending.empty else 0
+                else:
+                    pending = pd.DataFrame()
+                    total_pending_qty = 0
+            except Exception as e:
+                logger.error(f"Error reading customer orders: {e}")
+                total_pending_qty = 0
+                pending = pd.DataFrame()
+
+            forecast_demand = current_forecast.get("predicted_demand", 0)
+            target_demand = max(
+                int(total_pending_qty),
+                int(forecast_demand)
+            )
+
+            # ---- 2. Production phase ----
+            machines      = get_real_machines()
+            present_staff = get_present_staff()
+            if machines:
+                allocations = compute_allocation(machines, present_staff)
+                assigned_mc = {a["machine_id"] for a in allocations
+                               if a["operator"] not in ["Unassigned", "UNDER MAINTENANCE"]}
+                stage_capacities = {}
+                for m in machines:
+                    stage = m["type"]
+                    if stage not in stage_capacities:
+                        stage_capacities[stage] = 0
+                    if m["id"] in assigned_mc:
+                        val = m["baseProductivity"] * (min(100, max(0, float(m["health"]))) / 100)
+                        stage_capacities[stage] += val
+                raw_prod = min(stage_capacities.values()) if stage_capacities else 0
+                tick_prod = int(raw_prod * 0.1)
+                tick_prod = max(0, tick_prod)
+            else:
+                tick_prod   = 0
+                allocations = []
+
+            with stock_lock:
+                already_covered     = GLOBAL_DISPATCHED + GLOBAL_FINISHED_GOODS
+                remaining_to_produce = max(0, target_demand - already_covered)
+                desired_production  = min(tick_prod, remaining_to_produce)
+                if GLOBAL_RAW_STOCK >= desired_production:
+                    actual_production = desired_production
+                else:
+                    actual_production = max(0, GLOBAL_RAW_STOCK)
+                GLOBAL_RAW_STOCK    -= actual_production
+                GLOBAL_FINISHED_GOODS += actual_production
+                current_finished     = GLOBAL_FINISHED_GOODS
+
+            if actual_production > 0:
+                logger.info(
+                    f"⚙️ Autoloop Output: {actual_production} units. "
+                    f"Raw Remaining: {GLOBAL_RAW_STOCK} | "
+                    f"Finished: {current_finished} | Pending orders: {total_pending_qty}"
+                )
+
+            # ---- 3. Dispatch phase ----
+                        # AUTO SHIP FROM WAREHOUSE FIRST
+            try:
+                conn = sqlite3.connect(Config.DB_NAME)
+                warehouse_df = pd.read_sql("SELECT * FROM Warehouse", conn)
+
+                for _, order in pending.iterrows():
+                    stock_row = warehouse_df[
+                        warehouse_df['product_type'] == order['product_type']
+                    ]
+
+                    if not stock_row.empty:
+                        available = int(stock_row.iloc[0]['quantity'])
+
+                        if available > 0:
+                            ship_qty = min(order['quantity'], available)
+
+                            add_shipment(int(order['id']), ship_qty)
+                            update_warehouse_stock(order['product_type'], -ship_qty)
+
+                            if ship_qty >= order['quantity']:
+                                update_order_status(order['id'], 'shipped')
+                            else:
+                                update_order_status(order['id'], 'partial')
+
+                conn.close()
+
+            except Exception as e:
+                logger.error(f"Warehouse auto-ship error: {e}")
+                
+            if current_finished > 0 and not pending.empty:
+                priority_order = {'Urgent': 4, 'High': 3, 'Normal': 2, 'Low': 1}
+                sorted_orders  = pending.sort_values(
+                    by=['priority', 'created_at'],
+                    ascending=[False, True],
+                    key=lambda x: x.map(priority_order) if x.name == 'priority' else x
+                )
+                total_dispatched_now = 0
+
+                # Open a dedicated connection for reading already-shipped quantities
+                dispatch_conn = sqlite3.connect(Config.DB_NAME)
+
+                for idx, order in sorted_orders.iterrows():
+                    if current_finished <= 0:
+                        break
+
+                    # KEY FIX: Calculate how much is STILL OWED for this order,
+                    # not just sending order['quantity'] every time.
+                    try:
+                        already_shipped = dispatch_conn.execute(
+                            "SELECT COALESCE(SUM(quantity), 0) FROM Shipments WHERE order_id = ?",
+                            (int(order['id']),)
+                        ).fetchone()[0]
+                        already_shipped = int(already_shipped or 0)
+                    except Exception as e:
+                        logger.error(f"Could not fetch shipped qty for order {order['id']}: {e}")
+                        already_shipped = 0
+
+                    remaining_qty = int(order['quantity']) - already_shipped
+
+                    if remaining_qty <= 0:
+                        # Fully shipped already but status wasn't updated — fix it now
+                        update_order_status(order['id'], 'shipped',
+                                            actual_completion=datetime.now().isoformat())
+                        logger.info(f"✅ Fixed stale status for Order {order.get('order_ref', order['id'])}")
+                        continue
+
+                    ship_qty = min(remaining_qty, current_finished)
+                    if ship_qty <= 0:
+                        continue
+
+                    try:
+                        product_type = order.get('product_type') or 'leather_goods'
+                        add_shipment(int(order['id']), ship_qty, destination='Main Warehouse')
+                        update_warehouse_stock(product_type, -ship_qty)
+
+                        new_shipped_total = already_shipped + ship_qty
+                        if new_shipped_total >= int(order['quantity']):
+                            new_status = 'shipped'
+                        else:
+                            new_status = 'partial'
+
+                        update_order_status(order['id'], new_status,
+                                            actual_completion=datetime.now().isoformat())
+
+                        logger.info(
+                            f"🚚 Shipped {ship_qty}/{order['quantity']} units of "
+                            f"Order {order.get('order_ref', order['id'])} "
+                            f"({product_type}) → {new_status}"
+                        )
+                        total_dispatched_now += ship_qty
+                        current_finished     -= ship_qty
+
+                    except Exception as e:
+                        logger.error(f"Dispatch error for order {order['id']}: {e}")
+                        continue
+
+                dispatch_conn.close()
+
+                with stock_lock:
+                    GLOBAL_FINISHED_GOODS  = current_finished
+                    GLOBAL_DISPATCHED     += total_dispatched_now
+
+            # ---- 4. WebSocket update ----
+            if connected_clients:
+                state_bundle = {
+                    "type":         "stats",
+                    "rawStock":     GLOBAL_RAW_STOCK,
+                    "finishedGoods": GLOBAL_FINISHED_GOODS,
+                    "dispatched":   GLOBAL_DISPATCHED,
+                    "allocations":  allocations
+                }
+                dead_clients = set()
+                bundle_str   = json.dumps(state_bundle)
+                for ws in connected_clients:
+                    try:
+                        ws.send(bundle_str)
+                    except Exception:
+                        dead_clients.add(ws)
+                for ws in dead_clients:
+                    connected_clients.discard(ws)
+
+        except Exception as e:
+            logger.error(f"Autonomous Factory Loop Error: {e}")
+
+
+# -------------------------------------------------------
+# SECTION 2: Add these two routes to your Flask routes block
+# They power the orders_portal.html and orders_history.html
+# frontend with shipped_quantity per order.
+# -------------------------------------------------------
+
+
 
 def get_real_machines():
-    """Fetch current machine list with updated wear based on elapsed time."""
     if not os.path.exists(Config.CSV_PATH):
         logger.warning("Machines CSV not found")
         return []
-
     with physics_lock:
         df = safe_read_csv(Config.CSV_PATH)
         if df.empty:
             return []
-        
+        allowed_types = ['tanning', 'drying', 'finishing']
+        df = df[df['type'].str.lower().isin(allowed_types)]
+        if df.empty:
+            logger.error("No tanning/drying/finishing machines found in CSV")
+            return []
         required = ["machine_id", "type", "baseProductivity", "initialWear"]
         for col in required:
             if col not in df.columns:
                 logger.error(f"Missing column {col} in machines CSV")
                 return []
-        
         df.dropna(subset=["machine_id", "type", "baseProductivity"], inplace=True)
-        
         now = time.time()
         with last_pulse_lock:
             global last_pulse
@@ -186,14 +389,12 @@ def get_real_machines():
                 last_pulse = now
             else:
                 elapsed = 0.0
-        
         machines = []
         for idx, row in df.iterrows():
             try:
                 wear = float(row["initialWear"]) + (elapsed * 0.1)
-                wear = min(95.0, wear)
+                wear = min(9.0, wear)
                 df.at[idx, "initialWear"] = wear
-                
                 health = max(10, 100 - wear)
                 machines.append({
                     "id": row["machine_id"],
@@ -206,17 +407,13 @@ def get_real_machines():
             except (ValueError, KeyError) as e:
                 logger.error(f"Error processing machine row {idx}: {e}")
                 continue
-        
         safe_write_csv(df, Config.CSV_PATH, index=False)
-        
     return machines
 
 def get_present_staff():
-    """Return DataFrame of staff currently present (attendance today)."""
     staff_df = safe_read_csv(Config.STAFF_PATH)
     if staff_df.empty:
         return staff_df
-    
     present_ids = []
     try:
         conn = sqlite3.connect(Config.DB_NAME)
@@ -225,7 +422,6 @@ def get_present_staff():
         conn.close()
     except Exception as e:
         logger.error(f"Failed to get attendance: {e}")
-    
     present_staff = staff_df[staff_df["worker_id"].isin(present_ids)].copy()
     present_staff = present_staff.sort_values(by="overall_skill", ascending=False)
     return present_staff
@@ -234,11 +430,7 @@ def calculate_worker_fatigue(worker_id):
     try:
         conn = sqlite3.connect(Config.DB_NAME)
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT start_time FROM WorkerHistory
-            WHERE worker_id=? AND end_time IS NULL
-            ORDER BY start_time DESC LIMIT 1
-        """, (worker_id,))
+        cursor.execute("SELECT start_time FROM WorkerHistory WHERE worker_id=? AND end_time IS NULL ORDER BY start_time DESC LIMIT 1", (worker_id,))
         row = cursor.fetchone()
         conn.close()
         if not row:
@@ -246,47 +438,34 @@ def calculate_worker_fatigue(worker_id):
         start_time = pd.to_datetime(row[0])
         now = pd.Timestamp.now()
         hours_worked = (now - start_time).total_seconds() / 3600.0
-        fatigue = max(0.0, min(1.0, hours_worked / 8.0))
-        return fatigue
+        return max(0.0, min(1.0, hours_worked / 8.0))
     except Exception as e:
         logger.error(f"Error calculating fatigue: {e}")
         return 0.0
 
 def calculate_rl_decision(machines, present_staff, all_staff, demand_val):
-    """
-    Reinforcement learning based action recommendation.
-    Returns a textual recommendation, Q-value, and confidence.
-    """
     global prod_agent, current_forecast
     if prod_agent is None:
         return {"action": "⚠️ RL model not loaded", "q_value": 0, "confidence": 0}
-    
     valid_machines = [m for m in machines if m["health"] >= 30.0]
     if not valid_machines:
         return {"action": "Hardware completely offline. Maintenance required.", "q_value": 0, "confidence": 0}
-    
     if present_staff.empty:
         return {"action": "No workers present", "q_value": 0, "confidence": 0}
-    
     # Build state vector
     health_tanning = health_drying = health_finishing = 1.0
     for m in machines:
         m_type = str(m.get("type", "")).lower()
         h_val = float(m.get("health", 100)) / 100.0
-        if "tanning" in m_type:
-            health_tanning = h_val
-        elif "drying" in m_type:
-            health_drying = h_val
-        elif "finishing" in m_type:
-            health_finishing = h_val
-    
+        if "tanning" in m_type: health_tanning = h_val
+        elif "drying" in m_type: health_drying = h_val
+        elif "finishing" in m_type: health_finishing = h_val
     top_workers = present_staff.head(4)
     num_workers = len(top_workers)
     healths = [health_tanning, health_drying, health_finishing]
     wears = [1.0 - h for h in healths]
     productivities = [h for h in healths]
     avail = [1.0 if i < num_workers else 0.0 for i in range(4)]
-    
     fatigues_lst = []
     skills_lst = []
     shifts_lst = []
@@ -302,29 +481,21 @@ def calculate_rl_decision(machines, present_staff, all_staff, demand_val):
             fatigues_lst.append(0.0)
             skills_lst.append(0.0)
             shifts_lst.append(0.0)
-    
     avg_skill = float(np.mean([s for s in skills_lst if s > 0])) if any(s > 0 for s in skills_lst) else 0.0
     norm_demand = demand_val / 1000.0
     sup_lim = current_forecast.get("supply_limit", 600)
     prev_out = current_forecast.get("finished_goods", 0)
-    
     state_list = [norm_demand] + healths + wears + productivities + avail + fatigues_lst + skills_lst + shifts_lst + [
-        sup_lim / 1000.0,
-        np.clip(prev_out / 1000.0, 0.0, 1.0),
-        0.0,
-        avg_skill
+        sup_lim / 1000.0, np.clip(prev_out / 1000.0, 0.0, 1.0), 0.0, avg_skill
     ]
     state = np.array(state_list, dtype=np.float32)
-    
     machine_types = ["tanning", "drying", "finishing"]
     valid_actions = []
     for w_idx in range(4):
-        if w_idx >= num_workers:
-            continue
+        if w_idx >= num_workers: continue
         for m_idx in range(3):
             if any(machine_types[m_idx] in m["type"].lower() for m in valid_machines):
                 valid_actions.append(w_idx * 3 + m_idx)
-    
     try:
         best_action_idx = prod_agent.act(state, valid_actions=valid_actions, eval_mode=True)
         q_values = prod_agent.model.predict(state.reshape(1, -1), verbose=0)[0]
@@ -332,27 +503,19 @@ def calculate_rl_decision(machines, present_staff, all_staff, demand_val):
     except Exception as e:
         logger.error(f"RL recommendation failed: {e}")
         return {"action": "⚠️ RL error", "q_value": 0, "confidence": 0}
-    
     if best_action_idx is None:
         return {"action": "No operational machines for available skills", "q_value": 0, "confidence": 0}
-    
     w_idx = best_action_idx // 3
     m_idx = best_action_idx % 3
     recommended_worker = top_workers.iloc[w_idx]
     recommended_machine_type = machine_types[m_idx]
-    
     candidate_machines = [m for m in valid_machines if recommended_machine_type in m["type"].lower()]
     if candidate_machines:
         worst_machine = sorted(candidate_machines, key=lambda x: x["health"])[0]
     else:
         worst_machine = sorted(valid_machines, key=lambda x: x["health"])[0]
-    
     action_text = f"Assign {recommended_worker['name']} to {worst_machine['type']}"
-    return {
-        "action": action_text,
-        "q_value": float(best_q),
-        "confidence": float(best_q)
-    }
+    return {"action": action_text, "q_value": float(best_q), "confidence": float(best_q)}
 
 def compute_allocation(machines, present_staff):
     allocations = []
@@ -360,26 +523,14 @@ def compute_allocation(machines, present_staff):
     cursor = conn.cursor()
     current_time = pd.Timestamp.now()
     used_workers = set()
-
     with overrides_lock:
         manual_overrides_copy = MANUAL_OVERRIDES.copy()
-
     sorted_machines = sorted(machines, key=lambda x: x["health"])
     unassigned_machines = []
-
     for m in sorted_machines:
         if m["health"] < 30:
-            allocations.append({
-                "machine_id": m["id"],
-                "machine_name": m["type"],
-                "operator": "UNDER MAINTENANCE",
-                "operator_id": "None",
-                "reason": "Machine health critically low",
-                "match_percent": 0.0,
-                "machine_health": m["health"]/100
-            })
+            allocations.append({"machine_id": m["id"], "machine_name": m["type"], "operator": "UNDER MAINTENANCE", "operator_id": "None", "reason": "Machine health critically low", "match_percent": 0.0, "machine_health": m["health"]/100})
             continue
-
         manual_id = manual_overrides_copy.get(m["type"])
         if manual_id and manual_id not in used_workers:
             w_match = present_staff[present_staff['worker_id'] == manual_id]
@@ -397,20 +548,10 @@ def compute_allocation(machines, present_staff):
                 else:
                     cursor.execute("INSERT INTO WorkerHistory (worker_id, machine, start_time) VALUES (?, ?, ?)", (worker_id, m["type"], current_time.isoformat()))
                 conn.commit()
-                allocations.append({
-                    "machine_id": m["id"],
-                    "machine_name": m["type"],
-                    "operator": best_worker["name"],
-                    "operator_id": worker_id,
-                    "reason": "Assigned via Administrator Manual Override.",
-                    "match_percent": 1.0,
-                    "machine_health": m["health"]/100
-                })
+                allocations.append({"machine_id": m["id"], "machine_name": m["type"], "operator": best_worker["name"], "operator_id": worker_id, "reason": "Assigned via Administrator Manual Override.", "match_percent": 1.0, "machine_health": m["health"]/100})
                 used_workers.add(worker_id)
                 continue
-
         unassigned_machines.append(m)
-
     # DRL autonomous allocation
     machine_types = ["tanning", "drying", "finishing"]
     while unassigned_machines:
@@ -457,12 +598,7 @@ def compute_allocation(machines, present_staff):
         avg_skill = float(np.mean([s for s in skills_lst if s > 0])) if any(s > 0 for s in skills_lst) else 0.0
         sup_lim = current_forecast.get("supply_limit", 600)
         prev_out = current_forecast.get("finished_goods", 0)
-        state_list = [norm_demand] + healths + wears + productivities + avail + fatigues_lst + skills_lst + shifts_lst + [
-            sup_lim / 1000.0,
-            np.clip(prev_out / 1000.0, 0.0, 1.0),
-            0.0,
-            avg_skill
-        ]
+        state_list = [norm_demand] + healths + wears + productivities + avail + fatigues_lst + skills_lst + shifts_lst + [sup_lim / 1000.0, np.clip(prev_out / 1000.0, 0.0, 1.0), 0.0, avg_skill]
         state = np.array(state_list, dtype=np.float32)
         valid_actions = []
         for w_idx in range(num_workers):
@@ -503,33 +639,12 @@ def compute_allocation(machines, present_staff):
             cursor.execute("INSERT INTO WorkerHistory (worker_id, machine, start_time) VALUES (?, ?, ?)", (worker_id, target_machine["type"], current_time.isoformat()))
         conn.commit()
         fatigue_val = calculate_worker_fatigue(worker_id)
-        reason = f"""[RL AI Optimal Pathing]
-- Q-Value Confidence: {best_q:.2f}
-- Selected Profile >> Skill: {best_worker['overall_skill']} | Fatigue Evaluator: {fatigue_val:.2f}
-- Target: Optimal wear dispersion identified."""
-        allocations.append({
-            "machine_id": target_machine["id"],
-            "machine_name": target_machine["type"],
-            "operator": best_worker["name"],
-            "operator_id": worker_id,
-            "reason": reason,
-            "match_percent": (best_worker["overall_skill"] / 100.0) * (target_machine["health"] / 100.0),
-            "machine_health": target_machine["health"]/100
-        })
+        reason = f"""[RL AI Optimal Pathing]\n- Q-Value Confidence: {best_q:.2f}\n- Selected Profile >> Skill: {best_worker['overall_skill']} | Fatigue Evaluator: {fatigue_val:.2f}\n- Target: Optimal wear dispersion identified."""
+        allocations.append({"machine_id": target_machine["id"], "machine_name": target_machine["type"], "operator": best_worker["name"], "operator_id": worker_id, "reason": reason, "match_percent": (best_worker["overall_skill"] / 100.0) * (target_machine["health"] / 100.0), "machine_health": target_machine["health"]/100})
         used_workers.add(worker_id)
         unassigned_machines.remove(target_machine)
-
     for m in unassigned_machines:
-        allocations.append({
-            "machine_id": m["id"],
-            "machine_name": m["type"],
-            "operator": "Unassigned",
-            "operator_id": "None",
-            "reason": "No available matched workers",
-            "match_percent": 0.0,
-            "machine_health": m["health"]/100
-        })
-
+        allocations.append({"machine_id": m["id"], "machine_name": m["type"], "operator": "Unassigned", "operator_id": "None", "reason": "No available matched workers", "match_percent": 0.0, "machine_health": m["health"]/100})
     conn.close()
     return allocations
 
@@ -549,19 +664,11 @@ def compute_stats(machines, allocations=None):
         else:
             stage_capacities[stage] += int(m["baseProductivity"] * (m["health"] / 100))
     output = min(stage_capacities.values()) if stage_capacities else 0
-    return {
-        "total_machines": total,
-        "avg_health": avg_health,
-        "critical_count": critical,
-        "production_output": output
-    }
+    return {"total_machines": total, "avg_health": avg_health, "critical_count": critical, "production_output": output}
 
 def get_workers_list():
     present_staff = get_present_staff()
-    workers = []
-    for _, w in present_staff.iterrows():
-        workers.append({"id": w["worker_id"], "name": w["name"]})
-    return workers
+    return [{"id": w["worker_id"], "name": w["name"]} for _, w in present_staff.iterrows()]
 
 def generate_advanced_forecast():
     global lstm_recent_seq, current_forecast, pipeline
@@ -571,15 +678,10 @@ def generate_advanced_forecast():
         predicted_demand = pipeline.predict_demand(lstm_recent_seq)
         machines = get_real_machines()
         if not machines:
-            machines = [
-                {"type": "tanning", "baseProductivity": 120, "health": 80},
-                {"type": "drying", "baseProductivity": 100, "health": 70},
-                {"type": "finishing", "baseProductivity": 90, "health": 85}
-            ]
-        machine_list = [
-            {"type": m.get("name") or m.get("type"), "baseProductivity": m["baseProductivity"], "health": m["health"]}
-            for m in machines
-        ]
+            machines = [{"type": "tanning", "baseProductivity": 120, "health": 80},
+                        {"type": "drying", "baseProductivity": 100, "health": 70},
+                        {"type": "finishing", "baseProductivity": 90, "health": 85}]
+        machine_list = [{"type": m.get("name") or m.get("type"), "baseProductivity": m["baseProductivity"], "health": m["health"]} for m in machines]
         with stock_lock:
             raw_stock = GLOBAL_RAW_STOCK
         rejection_rate = np.random.uniform(0.05, 0.15)
@@ -595,17 +697,7 @@ def generate_advanced_forecast():
         lstm_recent_seq.append(output)
         lstm_recent_seq.pop(0)
         with stock_lock:
-            result = {
-                "date": pd.Timestamp.now().strftime('%Y-%m-%d'),
-                "predicted_demand": predicted_demand,
-                "supply_limit": GLOBAL_RAW_STOCK,
-                "stage_capacities": caps,
-                "bottleneck_stage": bottleneck,
-                "feasible_output": output,
-                "process_capacity": min(caps.values()) if caps else output,
-                "finished_goods": GLOBAL_FINISHED_GOODS,
-                "dispatched_goods": GLOBAL_DISPATCHED
-            }
+            result = {"date": pd.Timestamp.now().strftime('%Y-%m-%d'), "predicted_demand": predicted_demand, "supply_limit": GLOBAL_RAW_STOCK, "stage_capacities": caps, "bottleneck_stage": bottleneck, "feasible_output": output, "process_capacity": min(caps.values()) if caps else output, "finished_goods": GLOBAL_FINISHED_GOODS, "dispatched_goods": GLOBAL_DISPATCHED}
         return result
     except Exception as e:
         logger.error(f"Forecast generation failed: {e}")
@@ -646,7 +738,7 @@ if os.path.exists(Config.PROD_MODEL_PATH):
     except Exception as e:
         logger.error(f"Failed to load production RL model: {e}")
 else:
-    logger.warning("Production RL model not found at %s", Config.PROD_MODEL_PATH)
+    logger.warning("Production RL model not found")
 
 logistics_agent = None
 logistics_env = TruckEnv()
@@ -658,51 +750,85 @@ if os.path.exists(Config.LOGISTICS_MODEL_PATH):
     except Exception as e:
         logger.error(f"Failed to load logistics RL model: {e}")
 else:
-    logger.warning("Logistics RL model not found at %s", Config.LOGISTICS_MODEL_PATH)
+    logger.warning("Logistics RL model not found")
 
 pipeline = None
 lstm_recent_seq = []
-current_forecast = {
-    "feasible_output": 400,
-    "predicted_demand": 400,
-    "bottleneck_stage": "Unknown",
-    "process_capacity": 400
-}
-
+current_forecast = {"feasible_output": 400, "predicted_demand": 400, "bottleneck_stage": "Unknown", "process_capacity": 400}
 try:
     from production_model import ProductionSystem
-    logger.info("Initializing Advanced Production Intelligence AI...")
     pipeline = ProductionSystem()
     if os.path.exists(Config.DEMAND_CSV):
-        try:
-            demand_series = pd.read_csv(Config.DEMAND_CSV).groupby('date')['quantity'].sum().values
-            lstm_recent_seq = list(demand_series[-7:]) if len(demand_series) >= 7 else [400] * 7 
-            logger.info("Demand model trained on historical data")
-        except Exception as e:
-            logger.error(f"Failed to train demand model: {e}")
-            lstm_recent_seq = [400] * 7
+        demand_series = pd.read_csv(Config.DEMAND_CSV).groupby('date')['quantity'].sum().values
+        lstm_recent_seq = list(demand_series[-7:]) if len(demand_series) >= 7 else [400]*7
     else:
-        logger.warning("Demand CSV not found; using random data for training")
-        demand_series = np.random.randint(300, 600, 100)
-        lstm_recent_seq = list(demand_series[-7:]) if len(demand_series) >= 7 else [400] * 7
+        lstm_recent_seq = [400]*7
     logger.info("Advanced AI ready")
-except ImportError as e:
-    logger.error(f"ProductionSystem import failed: {e}")
 except Exception as e:
     logger.error(f"Error loading forecasting model: {e}")
 
 seed_attendance_if_empty()
 
 # -----------------------------
-# AUTONOMOUS FACTORY LOOP
+# AUTONOMOUS FACTORY LOOP (UPDATED to use CustomerOrders)
 # -----------------------------
 def autonomous_factory_loop():
     global GLOBAL_RAW_STOCK, GLOBAL_FINISHED_GOODS, GLOBAL_DISPATCHED, current_forecast
+
+    from database import get_all_customer_orders, update_order_status, add_shipment, update_warehouse_stock
+
     logger.info("Autonomous Factory System initiated. Waiting 5s before first cycle...")
     time.sleep(5)
+
     while True:
         try:
             time.sleep(5)
+
+            # ---- 1. Get pending customer orders ----
+            try:
+                df_orders = get_all_customer_orders()
+                # AUTO PROCESS PENDING ORDERS
+                import requests
+
+                for _, order in df_orders.iterrows():
+                    if order['status'] == 'pending':
+                        try:
+                            requests.post(f"http://localhost:5000/api/orders/{order['id']}/process")
+                        except Exception as e:
+                            logger.warning(f"Auto process failed for order {order['id']}: {e}")
+                if df_orders is not None and not df_orders.empty:
+                    pending = df_orders[df_orders['status'].isin(['pending', 'allocated', 'in_production'])]
+                    total_pending_qty = pending['quantity'].sum() if not pending.empty else 0
+                else:
+                    pending = pd.DataFrame()
+                    total_pending_qty = 0
+            except Exception as e:
+                logger.error(f"Error reading customer orders: {e}")
+                total_pending_qty = 0
+                pending = pd.DataFrame()
+
+            from market_forecast_model import forecast_30_days
+
+            forecast = forecast_30_days()
+
+            # ---- STRICT PARSING ----
+            if isinstance(forecast, dict):
+                forecast_demand = int(forecast.get("predicted_demand", 500))
+
+            elif isinstance(forecast, list) and len(forecast) > 0:
+                if isinstance(forecast[0], dict):
+                    forecast_demand = int(
+                        sum(item.get("predicted_demand", item.get("demand", 0)) for item in forecast)
+                        / len(forecast)
+                    )
+                else:
+                    forecast_demand = int(sum(forecast) / len(forecast))
+
+            else:
+                forecast_demand = 500
+
+            
+            # ---- 2. Production phase ----
             machines = get_real_machines()
             present_staff = get_present_staff()
             if machines:
@@ -721,28 +847,61 @@ def autonomous_factory_loop():
                 tick_prod = max(0, tick_prod)
             else:
                 tick_prod = 0
-            pending_orders_global = max(0, current_forecast.get("predicted_demand", 0) - GLOBAL_DISPATCHED)
+
             with stock_lock:
-                GLOBAL_RAW_STOCK = max(0, GLOBAL_RAW_STOCK)
-                GLOBAL_FINISHED_GOODS = max(0, GLOBAL_FINISHED_GOODS)
-                target_to_produce = max(0, pending_orders_global - GLOBAL_FINISHED_GOODS)
-                desired_production = min(tick_prod, target_to_produce)
+                already_covered = GLOBAL_DISPATCHED + GLOBAL_FINISHED_GOODS
+                TARGET_STOCK = forecast_demand
+
+                remaining_to_produce = max(
+                    TARGET_STOCK - already_covered,
+                    total_pending_qty
+                )
+                desired_production = min(tick_prod, remaining_to_produce)
                 if GLOBAL_RAW_STOCK >= desired_production:
                     actual_production = desired_production
                 else:
                     actual_production = max(0, GLOBAL_RAW_STOCK)
                 GLOBAL_RAW_STOCK -= actual_production
                 GLOBAL_FINISHED_GOODS += actual_production
+                update_warehouse_stock("Generic", actual_production)
                 current_finished = GLOBAL_FINISHED_GOODS
+
             if actual_production > 0:
-                logger.info(f"⚙️ Autoloop Output: {actual_production} units. Raw Remaining: {GLOBAL_RAW_STOCK} | Ready for Delivery: {current_finished}")
+                logger.info(f"⚙️ Autoloop Output: {actual_production} units. Raw Remaining: {GLOBAL_RAW_STOCK} | Finished: {current_finished} | Pending orders: {total_pending_qty}")
+
+            # ---- 3. Dispatch phase: ship finished goods to fulfill pending orders ----
+            if current_finished > 0 and not pending.empty:
+                priority_order = {'Urgent': 4, 'High': 3, 'Normal': 2, 'Low': 1}
+                sorted_orders = pending.sort_values(
+                    by=['priority', 'created_at'],
+                    ascending=[False, True],
+                    key=lambda x: x.map(priority_order) if x.name == 'priority' else x
+                )
+                total_dispatched_now = 0
+                for idx, order in sorted_orders.iterrows():
+                    if current_finished <= 0:
+                        break
+                    ship_qty = min(order['quantity'], current_finished)
+                    if ship_qty > 0:
+                        add_shipment(order['id'], ship_qty, destination='Main Warehouse')
+                        update_warehouse_stock(order['product_type'], ship_qty)
+                        new_status = 'shipped' if ship_qty >= order['quantity'] else 'partial'
+                        update_order_status(order['id'], new_status, actual_completion=datetime.now().isoformat())
+                        logger.info(f"🚚 Shipped {ship_qty} units of Order {order['order_ref']} ({order['product_type']})")
+                        total_dispatched_now += ship_qty
+                        current_finished -= ship_qty
+                with stock_lock:
+                    GLOBAL_FINISHED_GOODS = current_finished
+                    GLOBAL_DISPATCHED += total_dispatched_now
+
+            # ---- 4. WebSocket update ----
             if connected_clients:
                 state_bundle = {
                     "type": "stats",
                     "rawStock": GLOBAL_RAW_STOCK,
                     "finishedGoods": GLOBAL_FINISHED_GOODS,
                     "dispatched": GLOBAL_DISPATCHED,
-                    "allocations": allocations
+                    "allocations": allocations if 'allocations' in locals() else []
                 }
                 dead_clients = set()
                 bundle_str = json.dumps(state_bundle)
@@ -753,23 +912,12 @@ def autonomous_factory_loop():
                         dead_clients.add(ws)
                 for ws in dead_clients:
                     connected_clients.remove(ws)
-            if pending_orders_global > 0 and current_finished > 0:
-                dispatch_amount = min(current_finished, pending_orders_global)
-                dispatch_ready = (current_finished >= pending_orders_global) or (actual_production == 0)
-                if dispatch_ready:
-                    result = compute_truck_allocation(dispatch_amount)
-                    truck_assignments = result.get("assignments", [])
-                    if truck_assignments:
-                        total_dispatched_now = sum(alloc["assigned_load"] for alloc in truck_assignments)
-                        logger.info(f"🚚 🤖 AUTO-DISPATCHED (RL): {total_dispatched_now} units across {len(truck_assignments)} trucks.")
-                        with stock_lock:
-                            GLOBAL_FINISHED_GOODS -= total_dispatched_now
-                            GLOBAL_DISPATCHED += total_dispatched_now
+
         except Exception as e:
             logger.error(f"Autonomous Factory Loop Error: {e}")
 
 # -----------------------------
-# FLASK ROUTES
+# FLASK ROUTES (core only – order/warehouse/raw material endpoints are in the blueprint)
 # -----------------------------
 @app.route("/favicon.ico")
 def favicon():
@@ -808,6 +956,18 @@ def auth():
             session["name"] = rv[0]
             conn.close()
             return jsonify({"success": True, "redirect": "/mechanic"})
+    
+    elif role == "warehouse":
+        cursor.execute("SELECT name FROM WarehouseStaff WHERE staff_id=?", (user_id,))
+        rv = cursor.fetchone()
+        if rv:
+            session["user_id"] = user_id
+            session["role"] = "warehouse"
+            session["name"] = rv[0]
+            session["zone"] = data.get("zone", "finished")
+            conn.close()
+            return jsonify({"success": True, "redirect": "/warehouse"})
+
     else:
         cursor.execute("SELECT name FROM Workers WHERE worker_id=?", (user_id,))
         rv = cursor.fetchone()
@@ -895,13 +1055,7 @@ def stats():
     present = get_present_staff()
     alloc = compute_allocation(machines, present)
     stats_data = compute_stats(machines, alloc)
-    stats_data["machines"] = [{
-        "id": m["id"],
-        "name": m["type"],
-        "health": m["health"] / 100,
-        "productivity": m["baseProductivity"] / 100,
-        "wear": m["wear"]
-    } for m in machines]
+    stats_data["machines"] = [{"id": m["id"], "name": m["type"], "health": m["health"]/100, "productivity": m["baseProductivity"]/100, "wear": m["wear"]} for m in machines]
     return jsonify(stats_data)
 
 @app.route("/api/rl_output")
@@ -1033,6 +1187,16 @@ def get_forecast():
         current_forecast["dispatched_goods"] = GLOBAL_DISPATCHED
     return jsonify(current_forecast)
 
+@app.route("/warehouse")
+def warehouse_portal():
+    if session.get("role") != "warehouse":
+        return redirect(url_for("login_page"))
+    return render_template("warehouse.html", name=session.get("name"), zone=session.get("zone"))
+
+@app.route("/truck")
+def truck_portal():
+    return render_template("truck.html")
+
 @app.route("/api/forecast/next_day", methods=["POST"])
 def next_day_forecast():
     global current_forecast
@@ -1086,14 +1250,7 @@ def dashboard():
     stats_data = compute_stats(machines, allocations)
     stats_data["forecast"] = current_forecast
     delivery_plan = {"message": "Active dispatching handled by autonomous loop."}
-    return jsonify({
-        "machines": machines,
-        "attendance": present_staff.to_dict("records"),
-        "rl_decision": rl_decision,
-        "allocations": allocations,
-        "stats": stats_data,
-        "delivery": delivery_plan
-    })
+    return jsonify({"machines": machines, "attendance": present_staff.to_dict("records"), "rl_decision": rl_decision, "allocations": allocations, "stats": stats_data, "delivery": delivery_plan})
 
 @app.route("/api/worker_info/<worker_id>")
 def worker_info(worker_id):
@@ -1122,174 +1279,17 @@ def worker_info(worker_id):
             time_spent = (pd.Timestamp.now() - pd.to_datetime(start_time)).total_seconds()
         except:
             time_spent = 0
-    return jsonify({
-        "current_machine": current_machine,
-        "time_spent_seconds": time_spent,
-        "previous_machine": prev[0] if prev else "None",
-        "previous_duration": prev[1] if prev else 0,
-        "reason": reason,
-        "match_percent": match_percent
-    })
+    return jsonify({"current_machine": current_machine, "time_spent_seconds": time_spent, "previous_machine": prev[0] if prev else "None", "previous_duration": prev[1] if prev else 0, "reason": reason, "match_percent": match_percent})
 
-# ===================== NEW ORDER & SUPPLY CHAIN ROUTES =====================
-@app.route("/orders_portal")
-def orders_portal():
-    if session.get("role") != "admin":
-        return redirect(url_for("login_page"))
-    return render_template("orders_portal.html")
+# ===================== REGISTER ORDERS BLUEPRINT =====================
+from orders_api import orders_bp
+app.register_blueprint(orders_bp)
 
-@app.route("/order_detail/<int:order_id>")
-def order_detail(order_id):
-    if session.get("role") != "admin":
-        return redirect(url_for("login_page"))
-    return render_template("order_detail.html", order_id=order_id)
-
-@app.route("/warehouse_dashboard")
-def warehouse_dashboard():
-    if session.get("role") != "admin":
-        return redirect(url_for("login_page"))
-    return render_template("warehouse_dashboard.html")
-
-@app.route("/raw_material_portal")
-def raw_material_portal():
-    if session.get("role") != "admin":
-        return redirect(url_for("login_page"))
-    return render_template("raw_material_portal.html")
-
-@app.route("/api/orders/place", methods=["POST"])
-def api_place_customer_order():
-    try:
-        data = request.json
-        from database import add_customer_order
-        order_id, order_ref = add_customer_order(data)
-        return jsonify({"success": True, "order_id": order_id, "order_ref": order_ref})
-    except Exception as e:
-        logger.error(f"Place order error: {e}")
-        return jsonify({"success": False, "error": str(e)}), 400
-
-@app.route("/api/orders/list")
-def api_orders_list():
-    from database import get_all_customer_orders
-    df = get_all_customer_orders()
-    return jsonify(df.to_dict('records'))
-
-@app.route("/api/orders/<int:order_id>")
-def api_order_detail(order_id):
-    from database import get_order_by_id
-    order = get_order_by_id(order_id)
-    if order is None:
-        return jsonify({"error": "Order not found"}), 404
-    return jsonify(order.to_dict())
-
-@app.route("/api/orders/<int:order_id>/process", methods=["POST"])
-def api_process_order(order_id):
-    from database import get_order_by_id, update_order_status, add_order_allocation
-    order = get_order_by_id(order_id)
-    if not order:
-        return jsonify({"error": "Order not found"}), 404
-    machines = get_real_machines()
-    present_staff = get_present_staff()
-    if present_staff.empty:
-        return jsonify({"error": "No workers present"}), 400
-    allocations = compute_allocation(machines, present_staff)
-    assigned = [a for a in allocations if a["operator"] not in ["Unassigned", "UNDER MAINTENANCE"]]
-    if not assigned:
-        return jsonify({"error": "No available machines/workers"}), 400
-    alloc = assigned[0]
-    add_order_allocation(order_id, alloc["operator_id"], alloc["operator"], alloc["machine_id"], alloc["machine_name"])
-    update_order_status(order_id, "allocated")
-    update_order_status(order_id, "in_production")
-    return jsonify({"success": True, "message": f"Order {order_id} allocated to {alloc['operator']} on {alloc['machine_name']}"})
-
-@app.route("/api/orders/<int:order_id>/ship", methods=["POST"])
-def api_ship_order(order_id):
-    from database import get_order_by_id, update_order_status, add_shipment, update_warehouse_stock
-    order = get_order_by_id(order_id)
-    if not order:
-        return jsonify({"error": "Order not found"}), 404
-    if order['status'] != 'in_production':
-        return jsonify({"error": "Order not ready for shipping"}), 400
-    add_shipment(order_id, order['quantity'])
-    update_warehouse_stock(order['product_type'], order['quantity'])
-    from datetime import datetime
-    update_order_status(order_id, "shipped", actual_completion=datetime.now().isoformat())
-    return jsonify({"success": True, "message": f"Order {order_id} shipped to warehouse"})
-
-@app.route("/api/warehouse")
-def api_warehouse():
-    from database import get_warehouse_stock
-    df = get_warehouse_stock()
-    return jsonify(df.to_dict('records'))
-
-@app.route("/api/raw_material/inventory")
-def api_raw_material_inventory():
-    from database import get_raw_material_inventory
-    df = get_raw_material_inventory()
-    return jsonify(df.to_dict('records'))
-
-@app.route("/api/raw_material/needs", methods=["GET"])
-def api_raw_material_needs():
-    import sqlite3
-    conn = sqlite3.connect(Config.DB_NAME)
-    cursor = conn.cursor()
-    cursor.execute("SELECT product_type, quantity FROM CustomerOrders WHERE status NOT IN ('shipped', 'cancelled')")
-    rows = cursor.fetchall()
-    conn.close()
-    orders = [{"product_type": r[0], "quantity": r[1]} for r in rows]
-    needs = calculate_material_needs(orders)
-    return jsonify(needs)
-
-@app.route("/api/raw_material/predict", methods=["GET"])
-def api_raw_material_predict():
-    import sqlite3
-    conn = sqlite3.connect(Config.DB_NAME)
-    cursor = conn.cursor()
-    cursor.execute("SELECT material_type, quantity FROM RawMaterialInventory")
-    inv = {r[0]: r[1] for r in cursor.fetchall()}
-    cursor.execute("""
-        SELECT product_type, quantity FROM CustomerOrders
-        WHERE created_at >= datetime('now', '-30 days') AND status NOT IN ('cancelled')
-    """)
-    recent = [{"product_type": r[0], "quantity": r[1]} for r in cursor.fetchall()]
-    conn.close()
-    if not recent:
-        recent = [{"product_type": "Belt", "quantity": 100}]
-    predictions = get_7_30_90_predictions(inv, recent)
-    return jsonify(predictions)
-
-@app.route("/api/raw_material/order", methods=["POST"])
-def api_place_raw_material_order():
-    data = request.json
-    from database import add_raw_material_order
-    add_raw_material_order(
-        material_type=data['material_type'],
-        quantity=data['quantity'],
-        supplier=data.get('supplier', 'Unknown'),
-        urgency=data.get('urgency', 'Normal'),
-        cost=data.get('cost')
-    )
-    return jsonify({"success": True, "message": "Raw material order placed"})
-
-@app.route("/api/raw_material/orders", methods=["GET"])
-def api_raw_material_orders():
-    from database import get_raw_material_orders
-    df = get_raw_material_orders()
-    return jsonify(df.to_dict('records'))
-
-@app.route("/api/market/forecast", methods=["GET"])
-def api_market_forecast():
-    forecast = forecast_30_days()
-    return jsonify(forecast)
-
+# -----------------------------
+# RUN
+# -----------------------------
 if __name__ == "__main__":
     factory_thread = threading.Thread(target=autonomous_factory_loop, daemon=True)
     factory_thread.start()
-
     print("🚀 Running on http://127.0.0.1:5000")
-
-    app.run(
-        debug=False,
-        host="127.0.0.1",
-        port=5000,
-        threaded=True
-    )
+    app.run(debug=False, host="127.0.0.1", port=5000, threaded=True)

@@ -23,54 +23,94 @@ MATERIAL_PROFILE = {
 
 SEASONAL_FACTOR = {1:0.85,2:0.80,3:0.90,4:0.95,5:1.00,6:1.05,7:0.95,8:0.90,9:1.00,10:1.10,11:1.25,12:1.40}
 
+
 def generate_synthetic_usage_data():
     np.random.seed(42)
     dates = pd.date_range('2024-01-01', periods=365, freq='D')
     records = []
+
     for date in dates:
         s_mul = SEASONAL_FACTOR.get(date.month, 1.0)
+
         for ptype, profile in MATERIAL_PROFILE.items():
             qty = np.random.randint(30, 220) * s_mul
-            row = {'date': date.strftime('%Y-%m-%d'), 'product_type': ptype, 'quantity_produced': round(qty,0)}
+
+            row = {
+                'date': date,
+                'product_type': ptype,
+                'quantity_produced': round(qty, 0)
+            }
+
             for mat, per_unit in profile.items():
-                row[mat] = round(qty * per_unit * np.random.uniform(1.05,1.30), 2)
+                row[mat] = round(qty * per_unit * np.random.uniform(1.05, 1.30), 2)
+
             records.append(row)
+
     df = pd.DataFrame(records)
     os.makedirs(os.path.join(PROJECT_ROOT, 'dataset'), exist_ok=True)
     df.to_csv(os.path.join(PROJECT_ROOT, 'dataset', 'raw_material_usage.csv'), index=False)
+
     return df
 
+
 def train_model(force_retrain=False):
-    if os.path.exists(MODEL_PATH) and not force_retrain:
-        with open(MODEL_PATH, 'rb') as f:
-            return pickle.load(f)
-    # Load or generate data
     csv_path = os.path.join(PROJECT_ROOT, 'dataset', 'raw_material_usage.csv')
+
     if os.path.exists(csv_path):
         df = pd.read_csv(csv_path, parse_dates=['date'])
     else:
         df = generate_synthetic_usage_data()
-    # Prepare features
+
     df['dayofweek'] = df['date'].dt.dayofweek
     df['month'] = df['date'].dt.month
-    for lag in [1,7,30]:
+
+    for lag in [1, 7, 30]:
         df[f'orders_lag_{lag}'] = df['quantity_produced'].shift(lag)
+
     df.dropna(inplace=True)
+
     features = ['dayofweek', 'month', 'orders_lag_1', 'orders_lag_7', 'orders_lag_30']
     targets = ['Hides_kg', 'Chrome_Chemicals_L', 'Dyes_kg', 'Salt_kg']
+
     models = {}
+
     for target in targets:
         X = df[features]
         y = df[target]
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-        model = RandomForestRegressor(n_estimators=100, random_state=42)
+
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42
+        )
+
+        model = RandomForestRegressor(
+            n_estimators=300,
+            max_depth=12,
+            min_samples_split=5,
+            random_state=42,
+            n_jobs=-1
+        )
+
         model.fit(X_train, y_train)
+
+        y_pred = model.predict(X_test)
+
+        mae = mean_absolute_error(y_test, y_pred)
+
+        print(f"📦 {target} MAE:", round(mae, 2))
+
         models[target] = model
+
     os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
+
     with open(MODEL_PATH, 'wb') as f:
         pickle.dump(models, f)
-    logger.info(f"Saved raw material model to {MODEL_PATH}")
+
     return models
+
+
+
+
+
 
 def calculate_material_needs(orders_list):
     totals = {m:0.0 for m in ['Hides_kg','Chrome_Chemicals_L','Dyes_kg','Salt_kg']}
@@ -115,7 +155,6 @@ def get_7_30_90_predictions(current_inventory, recent_orders):
         'days_30': predict_needs(current_inventory, recent_orders, 30),
         'days_90': predict_needs(current_inventory, recent_orders, 90),
     }
-
 if __name__ == "__main__":
     train_model()
     print("Raw material model trained and saved.")
