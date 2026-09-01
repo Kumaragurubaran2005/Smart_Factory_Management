@@ -1,4 +1,5 @@
 # Smart Factory Management & AI Orchestration System
+# by Kumara Gurubaran GP
 
 An end-to-end, AI-powered **Smart Factory Management System** tailored for leather manufacturing and industrial supply chain operations. The system integrates **Deep Reinforcement Learning (DQN)** for production floor worker-machine scheduling and logistics dispatching, **Predictive Machine Learning** for market demand and raw material forecasting, and a **Real-Time Flask/WebSocket Web Application** for factory operations monitoring, order processing, and warehouse management.
 
